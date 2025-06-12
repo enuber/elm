@@ -1,0 +1,13 @@
+{
+  "name": "13_package_page",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "compile": "elm make src/Main.elm --output=index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

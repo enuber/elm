@@ -1,0 +1,65 @@
+// now building more on this, going to add buttons
+
+module Main exposing (main)
+
+import Browser
+import Html exposing (Html, div, p, text, button, input)
+import Html.Attributes exposing (value)
+import String exposing (fromInt)
+import Html.Events exposing (onClick, onInput)
+
+-- MODEL
+
+type alias Model =
+    { phrase : String
+    , name : String
+    , age : Int
+    }
+
+type Msg = Clicked | ClickedAgain | NameChanged String
+
+initialModel : Model
+initialModel =
+    { phrase = "Hello"
+    , name = "Erik"
+    , age = 40
+    }
+
+-- MAIN
+
+main : Program () Model Msg
+main =
+    Browser.sandbox
+        { init = initialModel
+        , view = view
+        , update = update
+        }
+
+-- VIEW
+
+view : Model -> Html Msg
+
+view model =
+    div []
+    [
+      p [] [text model.phrase]
+      ,  p [] [text model.name]
+      ,  p [] [text (fromInt model.age)]
+      , input [onInput NameChanged, value model.name] []
+      , button [onClick Clicked] [ text "click me" ]
+      , button [onClick ClickedAgain] [ text "click me too" ]
+    ]
+
+-- UPDATE
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of 
+        Clicked ->
+            { model | age = model.age + 1 }
+
+        ClickedAgain -> 
+            { model | name = model.name ++ " *" }
+
+        NameChanged newName ->
+            { model | name = newName }

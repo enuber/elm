@@ -1,0 +1,90 @@
+14 Set up
+
+setting up project
+
+elm init
+npm init -y
+
+update package.json to add in compile to script
+
+doing basic setup of the Main.elm file and, adding in an index.html file with the boiler plate code.
+
+______________________________________________________________________
+
+15 Happy Bday buttons
+
+to add in buttons, we have to update the view, instead of doing Html.div, Html.button, we can also import them in like we did Html to the page. Remember the first [] is for classes or anything else that would sit inside the <div HERE></div> or <button HERE></button>
+
+view data = 
+  Html.div [] [
+    Html.text data
+    , Html.button [] [ Html.text "Surprise"]
+    , Html.button [] [ Html.text "Reset"]
+  ]
+
+type Msg = MsgSurprise
+  | MsgReset
+
+
+  update msg data = 
+  case msg of 
+    MsgSurprise -> 
+      "Happy Birthday!!!"
+
+    MsgReset ->
+      "Welcome"
+
+the sections above got added in and, there are notes in the code.
+
+______________________________________________________________________
+
+16 HB Live
+
+in the package.json file need to add devDependencies for elm-live
+
+this then needs to be added to scripts
+    "dev": "elm-live src/Main.elm -- --debug --output=index.js",
+
+the -- in the middle is required 
+
+NOTE: Likely will need to run 
+npm install
+in order for elm-live to actually be working
+
+debug will give a small icon bottom right that will track everything in a debugger so you can see the changes being made and run through them.
+
+______________________________________________________________________
+
+17 HB input
+
+Created a type alias to define how the information will look
+
+added in the input field, along with updating all the code so that it uses that input to add in infomration that is used in the text. 
+
+______________________________________________________________________
+
+18 HB improvements
+
+As this is a point where there is refactor I copied previous code into Previous.elm, this one was mainly about getting rid of the blue lines under the terms by adding in "typescript" like info.
+
+______________________________________________________________________
+
+19 HB new changes
+
+more functionality, doing some basic stuff 
+first - adding in the number of characters the first name contains
+second - adding in age
+
+______________________________________________________________________
+
+20 HB refactor again
+
+Before refactor put the code into previous_again.elm
+
+first added in maybe for the firstname and fixed the errors that came from that
+
+______________________________________________________________________
+
+21. HB better views
+
+Broke out view into separate pieces to clean up the view

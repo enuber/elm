@@ -1,0 +1,59 @@
+11 simple page
+
+in terminal do 
+elm init
+
+we get the src folder and elm.json
+
+need to create with capital letter.
+Main.elm
+
+when you have some simple code, need to then be able to run it. Can do it in the terminal. 
+
+elm make src/Main.elm
+
+this will compile your code to html.
+
+______________________________________________________________
+
+12 Embedded page
+
+starting new project in folder 12_embedded_page
+
+going to compile code this time to an external js file.
+
+elm make src/Main.elm --output=index.js
+
+in vs code if you create an html file you can put 
+!
+then hit enter to have a skelelton doc started
+
+    <div class="content"></div>
+    <script src="index.js"></script>
+    <script>
+      Elm.Main.init({ node: document.querySelector('.content') });
+    </script>
+
+______________________________________________________________
+
+13 Package page
+
+creating another project 13_package_page
+
+this time he did it all in terminal. nothing new
+
+going to make this a package now "upgrade" it
+
+in terminal 
+
+npm init -y 
+
+this creates a package.json file
+
+in scripts
+
+    "compile": "elm make src/Main.elm --output=index.js",
+
+
+now can do 
+npm run compile

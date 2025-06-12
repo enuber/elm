@@ -1,0 +1,53 @@
+Doing a hello world program
+
+
+mine // based off of previous lessons wrote the below before the video started
+module Main exposing (main)
+
+import Browser
+import Html exposing (Html, div, text)
+
+-- MODEL
+
+type alias Model =
+    { phrase : String }
+
+initialModel : Model
+initialModel =
+    { phrase = "Hello World" }
+
+-- VIEW
+
+view : Model -> Html msg
+view model =
+    div []
+        [ div [] [ text model.phrase ] ]
+
+-- MAIN
+
+main : Program () Model msg
+main =
+    Browser.sandbox
+        { init = initialModel
+        , update = \_ model -> model  -- no-op update since it's a static display
+        , view = view
+        }
+
+
+lesson // from what was shown
+module Main exposing (main)
+
+import Browser
+import Html exposing (text)
+
+main : Program () String Never // Elm’s type for a program with no flags, using a String model, and no real messages (Never type)
+
+main = Browser.sandbox {
+  init = "Hello World"
+  , view = view
+  , update = update
+}
+
+view hello = text hello // renders the string as HTML text
+
+update msg hello = hello // non operational update function as nothing is needed since static

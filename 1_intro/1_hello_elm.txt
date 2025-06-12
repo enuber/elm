@@ -1,0 +1,53 @@
+1. Hello Elm
+
+ELM - new way to do web applications and front end. New generation of web languages. 
+
+Starting using a web browser to go to ellie-app.com
+
+Elm gets compiled to JS
+
+Broswer.sandbox - is an area in your web page where something will be placed
+
+main : Program () Model Msg
+main =
+    Browser.sandbox
+        { init = initialModel
+        , view = view
+        , update = update
+        }
+
+init: - this refers to the initial state of the model, in our case it is count = 0
+
+type alias Model =
+    { count : Int }
+
+
+initialModel : Model
+initialModel =
+    { count = 0 }
+
+view: function that helps you paint and generate the html
+
+view : Model -> Html Msg
+view model =
+    div []
+        [ button [ onClick Increment ] [ text "+1" ]
+        , div [] [ text <| String.fromInt model.count ]
+        , button [ onClick Decrement ] [ text "-1" ]
+        ]
+
+update: when something happens, the update runs like when the button Increment is clicked,  it increases the count
+
+type Msg
+    = Increment
+    | Decrement
+
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        Increment ->
+            { model | count = model.count + 1 }
+
+        Decrement ->
+            { model | count = model.count - 1 }

@@ -1,0 +1,34 @@
+go to elm-lang.org
+
+download the installer
+
+install
+
+Try opening the terminal and running commands like:
+
+elm init
+elm make src/Main.elm --optimize
+elm repl
+
+need to install node... we already have
+
+// to see the elm version
+elm --version
+
+in VS Code
+
+extensions - add elm tooling, looks like the blue wrench
+
+the extension added also has suggested installs
+npm install -g elm-test elm-format elm-review
+
+then to test, we will go into our 2_installation file
+
+do...
+elm init 
+hit enter don't have to answer questions will give you a src folder and elm.json file
+
+in the src folder create 
+Main.elm
+
+module Main exposing (main)

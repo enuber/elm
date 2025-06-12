@@ -1,0 +1,44 @@
+expanding the hello world code
+
+module Main exposing (main)
+
+import Browser
+import Html exposing (Html, text)
+import String exposing (fromInt)
+
+-- MODEL
+
+type alias Model =
+    { phrase : String
+    , name : String
+    , age : Int
+    }
+
+initialModel : Model
+initialModel =
+    { phrase = "Hello"
+    , name = "Erik"
+    , age = 40
+    }
+
+-- MAIN
+
+main : Program () Model Never
+main =
+    Browser.sandbox
+        { init = initialModel
+        , view = view
+        , update = update
+        }
+
+-- VIEW
+
+view : Model -> Html msg
+view model =
+    text (model.phrase ++ " " ++ model.name ++ " " ++ fromInt model.age)
+
+-- UPDATE
+
+update : msg -> Model -> Model
+update _ model =
+    model

@@ -1,0 +1,171 @@
+22 setup
+
+package.elm-lang.org
+
+you can search for Elm UI
+
+this is for layout and styling that can be used without using CSS
+
+
+set up in terminal
+
+elm init
+ elm install mdgriffith/elm-ui
+
+to compile
+ elm make src/Main.elm
+
+can add this in to take care of compling
+npm init -y
+
+
+-- can be any name 
+-- This is calling the layout function from elm-ui, which is used to create the root node for rendering your Elm UI. It returns a Html msg value. options = []: These are layout configuration options. You can specify things like Element.width, Element.height, Element.padding, etc. An empty list means no custom layout options are applied.
+-- [] - The second argument to Element.layout is a list of Element.Attribute items, such as styles or events. This is also empty here, so no special attributes are applied to the root element.
+-- This is the content of the layout: a single text node that displays the string "My dog", wrapped in elm-ui's layout system.
+viewLayout =
+  Element.layout {
+    options = []
+  }
+  []
+  (Element.text "My dog")
+
+
+  Element.layout
+This is the simpler and more common function. Use it when you don't need custom fonts, themes, or device information. 
+
+Element.layoutWith
+Use this when you need access to custom fonts, themes, or device-related info like screen size or orientation. It takes a config record with options, onResize, theme, and font.
+
+Element.layoutWith
+  { options = []
+  , onResize = Nothing
+  , theme = Element.defaultTheme
+  , font = Element.defaultFont
+  }
+  []
+  (Element.text "With custom layout")
+
+Which one should you use?
+Use **Element.layout** for 95% of cases — it's simple and works well.
+
+Use **Element.layoutWith** only if you need:
+  to respond to screen resizing 
+  a custom theme or font
+  full control over layout config
+
+____________________________________________________________________________________
+
+23 my dog colors
+
+spends half the video setting up npm 
+
+set up some colors and used Element to add them to things
+
+____________________________________________________________________________________
+
+24 MD Image
+
+showing how to add an image also using Element, also updating some of the elements and colors
+
+____________________________________________________________________________________
+
+25 MD fonts
+
+He downloaded fonts and then added them I'm not so this is what he did
+
+in html file, need ot add in the
+
+<style>
+  @font-face {
+    font-family: GreatVibes;
+    src: url('GreatVibes-Regular.ttf');
+  }
+    @font-face {
+    font-family: Typewriter;
+    src: url('TYPEWR__.ttf');
+  }
+</style>
+
+fontGreatVibes = 
+  Element.Font.family [ Element.Font.typeface "GreatVibes" ]
+
+fontTypewriter =
+  Element.Font.family [ Element.Font.typeface "Typewriter" ]
+
+now to use just dog
+, fontGreatVibes 
+, Element.Font.size 48
+
+in the element you want or the fontTypewriter
+
+
+____________________________________________________________________________________
+
+26 MD content
+
+using lorem ipsum to fill content
+
+adding in the view content section
+
+since I didn't add fonts, showing what he did to add the fonts to this section
+
+// this is basically a function where we pass in size and use it to set the top. Rather than write out the long paddingEach code over and over, this is a work around if you need to use it alot.
+paddingTop size = 
+  Element.paddingEach {top = size, right = 0, bottom = 0, left = 0}
+
+viewContent = 
+  Element.column [ fontTypewriter, Element.Font.size 16, paddingTop 20 ]
+  [
+      Element.paragraph 
+        [Element.paddingXY 0 20] 
+        [Element.text text1]
+      , Element.paragraph
+         [Element.paddingXY 0 20] 
+         [Element.text text2]
+      , Element.paragraph 
+        [Element.paddingXY 0 20] 
+        [Element.text text3]
+  ]
+
+
+____________________________________________________________________________________
+
+27 MD better colors
+
+just added more colors and reformatted how colors are putting them into a better structure
+
+____________________________________________________________________________________
+
+28 MD themes
+
+creating buttons for light and dark which will change the colors based on the buttons pressed
+
+
+____________________________________________________________________________________
+
+29 MD Types
+
+added "types" to everything in this video
+
+____________________________________________________________________________________
+
+30 MD imports
+
+you can do
+import Element.Font as EF 
+
+this makes it a type alias where Element.Font can now be called by saying just EF instead. 
+
+this means you are exposing everything
+import Html exposing (..)
+
+so now you can just say Html without having to say Html.Html or having to do import Html exposing (Html)
+
+rule of thumb - if exposing everything (..) do this with one library not multiple libraries.
+
+____________________________________________________________________________________
+
+31 MD semantics
+
+This video he uses alias to change the element. I did not do this so that the code is more readable and understandable since just learning

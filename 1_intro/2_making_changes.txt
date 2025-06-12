@@ -1,0 +1,25 @@
+This video is still using ellie-app.com and revolves around adding in another button to decrement by 10. 
+
+in the errors shown by the compiler
+
+record - refers to the 
+
+initialModel =
+    { count = 0 }
+
+field - refers to one piece inside of the record. kind of like a spot in a database.
+
+initialModel =
+    { count = 0, item = 'flowers' }
+
+if you recompile will throw an error because the type annotation needs to be updated to also show that item is allowed in the initialModel
+
+type alias Model =
+    { count : Int,
+      item: String }
+
+in the view portion, notice the commas are at the beginning of the line. This is apart of the langauge but, done this way so that no comma is actually missing. It makes it more obvious
+
+to concat
+
+button [ onClick Increment ] [ text ("Add " ++ model.item) ]

@@ -1,0 +1,65 @@
+// now building more on this, going to add a button
+
+module Main exposing (main)
+
+import Browser
+import Html exposing (Html, div, p, text, button)
+import String exposing (fromInt)
+import Html.Events exposing (onClick)
+
+-- MODEL
+
+type alias Model =
+    { phrase : String
+    , name : String
+    , age : Int
+    }
+
+type Msg = Clicked | ClickedAgain
+
+initialModel : Model
+initialModel =
+    { phrase = "Hello"
+    , name = "Erik"
+    , age = 40
+    }
+
+-- MAIN
+
+main : Program () Model Msg
+main =
+    Browser.sandbox
+        { init = initialModel
+        , view = view
+        , update = update
+        }
+
+-- VIEW
+
+view : Model -> Html Msg
+-- in the initial div [] - here we can add things like class="makeBold" or other things we need to add in as this is the part that will be in <div></div>
+-- the second group of [] is what will acutally appear in-between the divs the content of the div
+view model =
+    div []
+    [
+      p [] [text model.phrase]
+      ,  p [] [text model.name]
+      ,  p [] [text (fromInt model.age)]
+      , button [onClick Clicked] [ text "click me" ]
+      , button [onClick ClickedAgain] [ text "click me too" ]
+    ]
+
+-- UPDATE
+-- Msg — A message that represents an event (e.g., user clicked a button, data arrived, etc.).
+-- Model — The current state of your application.
+-- Returns a new Model — Elm never mutates state; instead, it returns an updated version of the state.
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of 
+      Clicked ->
+        -- means that we are taking what is already in the model and only changing the age
+        -- so we call model first so that we are still grabbing what is in their and then age separately as it is what is being updated
+        { model | age = model.age + 1 }
+      ClickedAgain -> 
+        { model | name = model.name + " *"}

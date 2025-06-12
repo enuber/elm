@@ -1,0 +1,28 @@
+# Elm build artifacts
+elm-stuff/
+elm.js
+
+# Node.js dependencies
+node_modules/
+
+# Output directories
+dist/
+build/
+public/
+
+# Optional: Parcel / Webpack / Vite outputs
+.cache/
+.parcel-cache/
+.vite/
+.temp/
+
+# Log files
+*.log
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+*.swp
+
+# VS Code settings (optional)
+.vscode/
