@@ -1,3 +1,8 @@
+-- Browser is for running Elm apps in a browser (in this case, Browser.sandbox).
+-- Element is the core of elm-ui, used for layout and styling.
+-- Element.Font, Element.Background, etc. are submodules providing convenience styling functions.
+-- You still import Html because Browser.sandbox expects a function that returns Html msg, and Element.layoutWith gives you that.
+
 module Main exposing (main)
 import Browser
 -- element is the central piece of the elm UI
@@ -37,7 +42,8 @@ lightColors = {
   }  
 
 
--- in the model we are initializoing with the darkColors. When we access colors now elsewhere we will use the model and then say model.primary or model.primaryDark etc
+-- in the model we are initializing with the darkColors. When we access colors now elsewhere we will use the model and then say model.primary or model.primaryDark etc
+-- You initialize with the dark theme (darkColors), and allow switching with a button.
 -- the type - main is the starting point, it is a Program, the () - the configuration of how the application starts. For example it could have a cookie value for a user session or language starting point. Then the Model is our data and finally the Message which is what allows us to make changes based on events.
 main : Program () Model Msg
 main = Browser.sandbox 
@@ -49,7 +55,9 @@ main = Browser.sandbox
 
 type Msg = MsgChangeColors
 
--- we used underscore because it isn't being used but, we replaced msg with the underscore
+-- Msg defines your messages/events. Right now you have one: MsgChangeColors.
+-- The update function checks the current model and toggles between the two themes.
+-- You use _ for the message since it doesn’t carry extra data and doesn’t need inspecting.
 update : Msg -> Model -> Model
 update _ model = 
   if model.primary == darkColors.primary then  
@@ -57,6 +65,8 @@ update _ model =
   else  
     darkColors
 
+-- the model is the theme.
+-- don't need dynamic data beyond the colors, so your model is just a record of Element.Color values.
 type alias Model = 
   {
     primaryDark : Element.Color
@@ -74,6 +84,9 @@ type alias Model =
 -- This is calling the layout function from elm-ui, which is used to create the root node for rendering your Elm UI. It returns a Html msg value. options = []: These are layout configuration options. You can specify things like Element.width, Element.height, Element.padding, etc. An empty list means no custom layout options are applied.
 -- [] - The second argument to Element.layout is a list of Element.Attribute items, such as styles or events. This is also empty here, so no special attributes are applied to the root element.
 -- This is the content of the layout: a single text node that displays the string "My dog", wrapped in elm-ui's layout system.
+-- This is your root view function. It renders the entire page.
+-- You use Element.layoutWith to apply global options (like focus styling) and attributes (background, padding, font color).
+-- The third argument is the actual content layout (Element.column in this case).
 viewLayout : Model -> Html Msg
 viewLayout model =
   Element.layoutWith {
@@ -101,7 +114,8 @@ viewLayout model =
       , viewContent
     ])
 
--- Element.Region.heading - for screen readers so gives this title an h1 tag
+-- Large bold heading.
+-- Element.Region.heading 1 makes it behave like an h1 semantically.
 viewTitle : Model -> Element.Element msg
 viewTitle model = 
   Element.paragraph [
@@ -115,6 +129,8 @@ viewTitle model =
   ]
  
 
+-- Smaller subtitle with a different color and size.
+-- Element.Region.heading 2 maps to an h2 tag semantically.
 viewSubtitle : Model -> Element.Element msg
 viewSubtitle model = 
   Element.paragraph [ Element.Font.color model.primaryLight, Element.Font.regular, Element.Region.heading 2 ]
@@ -123,6 +139,8 @@ viewSubtitle model =
   ]
 
 -- type is based on the fact that it is an HTML element that will appear on the page
+-- Responsive image with a max width of 500px and horizontal padding.
+-- description is for screen readers (like alt text).
 dogImage : Element.Element msg
 dogImage = 
   Element.image [ 
@@ -135,6 +153,8 @@ dogImage =
     , description = "picture of a dog"
   }
 
+-- A styled button that triggers MsgChangeColors.
+-- The mouseOver effect changes background color when hovering.
 buttonChangeColors : Model -> Element.Element Msg
 buttonChangeColors model = 
   Element.Input.button [
@@ -163,6 +183,8 @@ text2 = "Marshmallow apple pie dessert powder jelly-o marshmallow gummies sweet 
 text3 : String
 text3 = "Biscuit danish apple pie gingerbread jelly. Chupa chups marshmallow cake cake cotton candy danish. Wafer gummies bear claw pastry topping tiramisu. Apple pie oat cake candy canes cotton candy jujubes gummies powder dessert bonbon. Pastry bear claw halvah tart dragée toffee gummi bears dessert lollipop. Macaroon sesame snaps jelly-o jelly beans pie sweet bear claw pudding."
 
+-- Main content block with paragraphs of text and region marked as the main content for screen readers.
+-- Element.paddingXY gives vertical spacing between paragraphs.
 viewContent : Element.Element msg
 viewContent = 
   Element.column [ 

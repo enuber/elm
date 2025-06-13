@@ -1,5 +1,402 @@
-1 setup
+32 setup
+
+elm init
+elm install elm/http
+elm install elm/json
+elm install krisajenkins/remotedata
+
+
+
+Overview
+Your app does the following:
+
+1 Starts in NotAsked state.
+2 Immediately fires an HTTP request to load a title.
+3 Transitions to Loading automatically.
+4 Updates to Success or Failure once the response arrives.
+5 Shows the result in the view.
+
 
 
 
 ____________________________________________________________________________________
+
+33 JSON data
+
+put together the getTitle, dataTitleDecoder pieces along with the Msg for catching the event when the JSON comes through.
+
+____________________________________________________________________________________
+
+34 JSON Request
+
+This was about setting up the browser.element and, then adding all the pieces that it needs.
+
+____________________________________________________________________________________
+
+35 JSON run
+
+npx elm-live src/Main.elm -- --debug
+
+____________________________________________________________________________________
+
+36 JSON error details
+
+getErrorMessage : Http.Error -> String
+getErrorMessage errorDetail = 
+  case errorDetail of
+      Http.NetworkError ->
+        "Connection error"
+      Http.BadStatus errorStatus ->
+        "Invalid server response " ++ String.fromInt errorStatus
+      Http.Timeout ->
+        "Request time out"
+      Http.BadUrl reasonError ->
+        "Invalid request URL " ++ reasonError
+      Http.BadBody invalidData ->
+        "Invalid data " ++ invalidData
+
+Revised a bit after to add error to the model and, then had to update the initModel and, updated how the error gets shown/called 
+
+____________________________________________________________________________________
+
+37 JSON result
+
+refactoring here the error stuff and changing the Model. Old code in Previous.elm
+
+____________________________________________________________________________________
+
+38 JSON remote data
+
+installed
+ elm install krisajenkins/remotedata
+
+
+It helps model asynchronous data loading states more safely and clearly.
+Instead of just Maybe or Result, RemoteData explicitly tracks one of four possible states:
+
+type RemoteData error value
+    = NotAsked       -- You haven't tried to load anything yet
+    | Loading        -- A request is in progress
+    | Success value  -- You got a good response
+    | Failure error  -- You got an error (like a network problem)
+
+
+This makes your UI code much more expressive and safer than trying to manage those states yourself.
+
+
+____________________________________________________________________________________
+
+BREAKDOWN OF PROJECT
+
+In Elm:
+
+Model (capitalized) is a type name — like a blueprint for your data structure.
+model (lowercase) is a variable name — an actual value that holds your current app state.
+
+It's just like in JavaScript or TypeScript:
+type Model = { name: string }  // Type definition
+const model = { name: "Erik" } // A variable holding that type
+
+------------------------------------------------------------------------------------
+
+Browser: enables browser-based Elm apps
+Html: for rendering content
+Http: to make HTTP requests
+Json.Decode: to decode the response from the server
+RemoteData: to track the async state
+
+
+import Browser
+import Html exposing (Html)
+import Http
+import Json.Decode exposing (Decoder, field, string)
+import RemoteData exposing (RemoteData)
+
+------------------------------------------------------------------------------------
+
+The Model has a single field result, which can be:
+
+.NotAsked (before the request starts)
+.Loading
+.Success "..." (if the title loaded correctly)
+.Failure Http.Error (if something went wrong)
+
+more in depth - 
+
+type alias Model = ...
+type alias defines a shorthand name (an alias) for a record type.
+Model is a conventional name in Elm apps — it represents your application state.
+This means wherever you write Model, you’re referring to a record with the structure defined here.
+
+result
+This is the name of the field in your model. You could name it anything (e.g., titleState, apiData, etc.), but result here reflects that it will hold the result of an HTTP request.
+
+RemoteData Http.Error String
+This is the type of the result field — and it’s very expressive:
+
+RemoteData
+This comes from the krisajenkins/remotedata package. It’s a union type that helps track data that loads asynchronously.
+It has four possible states:
+type RemoteData error value
+    = NotAsked
+    | Loading
+    | Success value
+    | Failure error
+
+This makes it easier to write code that handles loading/error/success cases explicitly and safely.
+
+Http.Error
+This is the possible error type you might get from an HTTP request. Examples:
+Http.BadUrl
+Http.Timeout
+Http.NetworkError
+etc.
+
+String
+This is the type of the successful value — in this case, you expect the API to return a title (a String).
+
+
+Example Values of model.result
+{ result = RemoteData.NotAsked }
+{ result = RemoteData.Loading }
+{ result = RemoteData.Success "hello world" }
+{ result = RemoteData.Failure Http.Timeout }
+
+
+
+type alias Model =
+    { result : RemoteData Http.Error String }
+
+------------------------------------------------------------------------------------
+
+This is the one and only message type.
+When the HTTP request completes (success or failure), this message will be dispatched, carrying the RemoteData result.
+
+In Elm, Msg stands for "Message", and it's used to represent events or actions that can trigger an update to your app’s state.
+
+What is type Msg = ...
+This declares a custom type called Msg.
+In Elm, your update function always takes a Msg as input — it’s how your application reacts to things like button clicks, HTTP responses, input events, etc.
+So:
+➡️ Whenever an event happens (like an HTTP response coming back), Elm sends a message to your update function.
+You define what kinds of messages can be sent using the Msg type.
+
+MsgGotTitle (...)
+This is one constructor of the Msg type.
+It means: “a message that we’ve received the result of fetching the title.”
+You could have multiple constructors for different types of messages, like:
+
+ type Msg
+    = MsgGotTitle (RemoteData Http.Error String)
+    | ButtonClicked
+    | NameChanged String
+
+
+(RemoteData Http.Error String)
+This is the payload of the message — in this case, a RemoteData value. Let's break that down too:
+
+RemoteData
+This is a union type from the krisajenkins/remotedata package. It's commonly used for tracking the status of asynchronous data. It has four possible values:
+
+type RemoteData error value
+    = NotAsked
+    | Loading
+    | Success value
+    | Failure error
+
+Http.Error
+This is the error type that RemoteData will contain if the request fails. It can be:
+
+Http.BadUrl
+Http.Timeout
+Http.NetworkError
+etc.
+
+String
+This is the success type — the actual data you're trying to get from the API.
+In this example, you're expecting the HTTP request to return a JSON object with a "title" string.
+
+
+type Msg = 
+    MsgGotTitle (RemoteData Http.Error String)
+
+------------------------------------------------------------------------------------
+
+You're using Browser.element instead of Browser.sandbox because sandbox doesn't support commands (Cmd msg), which are needed to make HTTP requests.
+
+Browser.element is one of the four main entry points in Elm for building web applications, and it's the one you use when you need:
+initial flags
+commands (Cmd) — like HTTP requests
+subscriptions (Sub) — like keyboard, mouse, or time-based events
+full control over the init, update, view, and subscriptions
+
+When to use Browser.element
+Use it when:
+You need to fetch data on page load.
+You need to perform side effects (Cmd Msg).
+You want to handle subscriptions (keyboard, time, etc.).
+You don’t need routing (Browser.application is for full SPA-style apps).
+
+
+
+
+main : Program () Model Msg
+main = Browser.element {
+  init = init,
+  view = view, 
+  update = update, 
+  subscriptions = subscriptions
+}
+
+------------------------------------------------------------------------------------
+
+Starts with NotAsked
+Immediately kicks off a command: getTitle, which makes the HTTP request
+This is the first fuction that runs when the app starts
+
+{ result = RemoteData.NotAsked }
+This creates the initial model. You’ve defined:
+
+type alias Model =
+    { result : RemoteData Http.Error String }
+
+So you're setting result to:
+
+RemoteData.NotAsked
+
+This is a constructor from the RemoteData library, meaning:
+The request hasn’t started yet. We haven’t made an HTTP request, and we don’t have any data or errors yet.
+
+getTitle
+This is a command that does something — in this case, make an HTTP request.
+getTitle : Cmd Msg
+
+It’s a Cmd (Command) that you already defined elsewhere, like:
+
+getTitle =
+    Http.get
+        { url = "..."
+        , expect = Http.expectJson upgradeToRemoteData decoder
+        }
+
+This tells Elm: “As soon as we start, go fetch some data.”
+
+
+
+init : () -> (Model, Cmd Msg)
+init _ =
+    ( { result = RemoteData.NotAsked }, getTitle )
+
+------------------------------------------------------------------------------------
+
+This part handles all four RemoteData states:
+  .Failure: shows the error
+  .Success: shows the title
+  .Loading: shows "Loading..."
+  .NotAsked: shows a default message
+
+view : Model -> Html Msg
+view model =
+  case model.result of
+    RemoteData.Failure error -> 
+      Html.text (getErrorMessage error)
+
+    RemoteData.Success title ->
+      Html.text title
+
+    RemoteData.Loading ->
+      Html.text "Loading..."
+
+    RemoteData.NotAsked ->
+      Html.text "Where everything starts"
+
+------------------------------------------------------------------------------------
+
+When the HTTP response comes back, MsgGotTitle is triggered. It updates the model with the result.
+
+update : Msg -> Model -> (Model, Cmd Msg)
+
+This means:
+Given a Msg (like an event), and the current Model, return:
+the new Model (what your app should look like now),
+and a command to possibly do something side-effecty (like an HTTP request).
+
+
+Function Body: What's Happening?
+update msg model =
+    case msg of
+        MsgGotTitle result ->
+          ({ model | result = result }, Cmd.none)
+
+Step-by-step:
+We pattern match on the msg to see what event just happened.
+
+Here, it’s MsgGotTitle result.
+result is of type RemoteData Http.Error String — meaning it could be:
+Success "..." (we got the title),
+Failure ... (it failed),
+or still Loading, etc.          
+
+({ model | result = result }, Cmd.none)
+
+{ model | result = result }:
+This is Elm's record update syntax. It means:
+“Keep everything else the same in the model, but change the result field.”
+Cmd.none:
+No side-effects are needed after this update. We're just updating the state.
+
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+    case msg of
+        MsgGotTitle result ->
+          ({ model | result = result }, Cmd.none)
+
+------------------------------------------------------------------------------------
+
+You're not using any real-time or ongoing subscriptions (like WebSockets, mouse tracking, etc.), so return Sub.none.
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.none
+
+------------------------------------------------------------------------------------
+
+HTTP Request and Decoder
+
+This sends a GET request to a fake API.
+
+getTitle : Cmd Msg
+getTitle = 
+  Http.get {
+    url = "https://jsonplaceholder.typicode.com/posts/1",
+    expect = Http.expectJson upgradeToRemoteData dataTitleDecoder
+  }
+
+It expects a JSON response like:
+
+{
+  "userId": 1,
+  "id": 1,
+  "title": "some blog post"
+}
+
+Then:
+
+upgradeToRemoteData : Result Http.Error String -> Msg
+upgradeToRemoteData result = 
+  MsgGotTitle (RemoteData.fromResult result)
+
+This wraps the Result (Ok "..." or Err ...) into a RemoteData variant and converts it into a message.
+
+dataTitleDecoder : Decoder String
+dataTitleDecoder =
+    field "title" string
+
+Just decodes the "title" field from the JSON.
+
+------------------------------------------------------------------------------------
+
+Takes a low-level Http.Error and turns it into a user-friendly string for the UI.
+
+getErrorMessage : Http.Error -> String
