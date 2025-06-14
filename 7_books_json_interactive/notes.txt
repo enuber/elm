@@ -1,0 +1,85 @@
+40 books setup
+
+elm init
+elm install elm/http
+elm install elm/json
+elm install mdgriffith/elm-ui
+elm install elm/svg
+
+npx elm-live src/Main.elm -- --debug
+
+
+built out a skeleton with Model, Msg, Browser.Element and all the pieces that go with the Browser.Element
+
+____________________________________________________________________________
+
+41 Books visuals
+
+added in a searchbar component. and then fixed updates so that the changes were being registered. 
+
+
+____________________________________________________________________________
+
+42 Searchbar
+
+Added in a search button and made the searchbar a row. Made the viewLayout have options for focusStyle
+
+
+____________________________________________________________________________
+
+43 JSON call
+
+Make the JSON call in the code
+
+created the cmdSearch and all the decodes for it as well as updated the Msg and Update areas
+
+____________________________________________________________________________
+
+44 JSON decoding
+
+updated/fixed the decoding so we are getting the title, thumbnail and link
+
+____________________________________________________________________________
+
+45 Reporting Errors
+
+set up errors that can arise, you have to do them all, can't leave some off.
+
+____________________________________________________________________________
+
+46 thumbnails
+
+set it up to show the thumbnails of the book and then afterwards working on showing a list of books with covers. 
+
+____________________________________________________________________________
+
+47 Links
+
+with title, links and thumbnails showing will now redo to have the link added so that it is clickable.
+
+____________________________________________________________________________
+
+48 Loading
+
+small refinements like adding loading text
+
+started with adding in types for things that they weren't added in for. 
+created loader with SVG and have it animated. Needs to still be only visible when actually loading, currently here it is just visible all the time.
+
+____________________________________________________________________________
+
+49 Books let
+
+using a let inside of the MsgGotResults to turn the loading whichw as added to the model to false. This let allows you to do other things that may effect the next step. 
+
+In Elm, the let keyword is used to define local variables or intermediate values within an expression. It's similar to const or let in JavaScript, or let in functional languages like Haskell or OCaml.
+
+doublePlusOne : Int -> Int
+doublePlusOne n =
+    let
+        doubled = n * 2
+    in
+        doubled + 1
+
+
+____________________________________________________________________________
