@@ -83,3 +83,25 @@ doublePlusOne n =
 
 
 ____________________________________________________________________________
+
+50 Enter Key
+
+used subscriptions to watch for browser events
+
+____________________________________________________________________________
+
+51 Cards
+
+Added some styling to the text and added in some background color. Also switch to Let in, gives us better control for styling
+
+____________________________________________________________________________
+
+52 Wrapped rows
+
+more styling including using wrappedRows
+
+____________________________________________________________________________
+
+53 Focused
+
+working on focus for the cards

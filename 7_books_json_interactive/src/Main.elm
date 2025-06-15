@@ -10,6 +10,7 @@ import Element.Input
 import Element.Border
 import Svg
 import Svg.Attributes as SA
+import Browser.Events
 
 
 type alias Model = 
@@ -33,6 +34,7 @@ type Msg
   = MsgSearch 
   | MsgGotResults (Result Http.Error (List Book))
   | MsgInputTextField String
+  | MsgKeyPressed String
 
 
 main: Program () Model Msg
@@ -45,11 +47,11 @@ main = Browser.element {
 
 init: () -> (Model, Cmd Msg )
 init _ = 
-  ( initModel, Cmd.none )
+  ( initModel, cmdSearch initModel )
 
 initModel: Model
 initModel = {
-  searchText = ""
+  searchText = "Spy X Family"
   , results = []
   , errorMessage = Nothing
   , loading = False
@@ -68,7 +70,13 @@ update msg model =
         ({ model | searchText = newTextInput }, Cmd.none)
 
       MsgSearch ->
-        ({ model | loading = True }, cmdSearch model)
+        updateStartSearch model
+
+      MsgKeyPressed key ->
+        if key == "Enter" then
+          updateStartSearch model
+        else
+          ( model, Cmd.none )
 
       MsgGotResults result ->
           let
@@ -100,10 +108,17 @@ update msg model =
                   ( { newModel | errorMessage = Just errorMessage }, Cmd.none )
 
 
+updateStartSearch : Model -> (Model, Cmd Msg)
+updateStartSearch model =
+   ({ model | loading = True }, cmdSearch model)
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Browser.Events.onKeyPress keyPressed
+
+keyPressed : Decoder Msg
+keyPressed =
+  Decode.map MsgKeyPressed (Decode.field "key" Decode.string)
 
 -- added options with layoutWith so that we can keep focus not having any weird borders.
 viewLayout : Model -> Html Msg
@@ -111,18 +126,22 @@ viewLayout model =
   Element.layoutWith {
     options = [
       Element.focusStyle {
-          borderColor = Nothing
+          borderColor = Just (Element.rgb255 0x00 0x33 0x66)
           , backgroundColor = Nothing
           , shadow = Nothing
       }
     ]
   } [] (
-    Element.column [] [viewSearchBar model, viewErrorMessage model, viewResults model]
+    Element.column [Element.padding 20] [
+      viewSearchBar model
+      , viewErrorMessage model
+      , viewResults model
+      ]
   )
 
 viewSearchBar : Model -> Element.Element Msg
 viewSearchBar model = 
-  Element.row [] 
+  Element.row [ Element.spacing 10, Element.paddingXY 0 12] 
     [ Element.Input.search [] 
         {
           onChange = MsgInputTextField
@@ -174,33 +193,57 @@ viewErrorMessage model =
 
 viewResults : Model -> Element.Element msg
 viewResults model =  
-  Element.column [] 
+  Element.wrappedRow [ Element.spacing 6, Element.centerX] 
     (List.map viewBook model.results)
 
 
 viewBook : Book -> Element.Element msg
 viewBook book =  
-  Element.newTabLink [] {
-    url = book.link
-    , label =
-      Element.column []
-      [
-        Element.text book.title
-        , case book.thumbnail of
+  let
+      titleE = Element.paragraph  [Element.Font.bold, Element.Font.underline, Element.paddingXY 0 12] [Element.text book.title]
+      thumbnailE = case book.thumbnail of
             Just thumbnail ->
               viewBookCover thumbnail book.title
             Nothing ->
               Element.none
-        , case book.pages of
+      pagesE = case book.pages of
           Just pages ->
-            Element.text (String.fromInt pages)
+            Element.el [ Element.Font.size 12 ]
+            (Element.text ("(" ++ String.fromInt pages ++ " pages)"))
           Nothing ->
             Element.none
-        , case book.publisher of
+      publisherE = case book.publisher of
           Just publisher ->
-            Element.text publisher
+            Element.paragraph [Element.Font.size 16][Element.text publisher]
           Nothing -> 
             Element.none
+  in
+  
+  Element.newTabLink [
+    Element.width (Element.px 360)
+    , Element.height (Element.px 300)
+    , Element.Background.color (Element.rgb255 0xe3 0xea 0xed)
+    , Element.Border.rounded 20
+    , Element.padding 10
+    , Element.mouseOver [
+        Element.Background.color (Element.rgb255 0x33 0x66 0x99)
+        , Element.Font.color (Element.rgb255 255 255 255 )
+    ]
+    , Element.focused [
+        Element.Background.color (Element.rgb255 0x33 0x66 0x99)
+        , Element.Font.color (Element.rgb255 255 255 255 )
+    ]
+  ] {
+    url = book.link
+    , label =
+      Element.row [ Element.centerX ]
+      [ thumbnailE
+      , Element.column [ Element.padding 20 ]
+        [ 
+          titleE
+          , publisherE
+          , pagesE
+        ]
       ]
   }
 
@@ -219,6 +262,10 @@ viewSearchButton =
     , Element.Border.rounded 5
     , Element.padding 12
     , Element.mouseOver [
+      Element.Background.color (Element.rgb255 0x33 0x66 0x99)
+      , Element.Font.color (Element.rgb255 0xdd 0xdd 0xdd)
+    ]
+    , Element.focused [
       Element.Background.color (Element.rgb255 0x33 0x66 0x99)
       , Element.Font.color (Element.rgb255 0xdd 0xdd 0xdd)
     ]
