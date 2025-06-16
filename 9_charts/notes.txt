@@ -1,0 +1,92 @@
+58 Chart setup
+
+elm init
+elm install terezka/elm-charts
+elm install elm/svg
+
+
+npx elm-live src/Main.elm
+
+Did some basic set up to get two sets of bars to appear with a grid
+
+_________________________________________________________________________
+
+59 Chart Colors
+
+changed colors, created list and then "dict" of data.
+
+_________________________________________________________________________
+
+
+main : Html msg
+
+You're declaring a main function that produces an HTML chart.
+Since you're not using the Elm architecture (Browser.sandbox or Browser.element), this is a static HTML page with a single chart.
+
+
+main = 
+  C.chart
+    [ CA.width 900
+      , CA.height 300
+      , CA.margin {top = 50, right = 50, bottom = 50, left = 50}
+    ] 
+    [
+      C.bars [] [
+        C.bar .calories [ CA.color "purple"],
+        C.bar .kj [ CA.color "pink"]
+      ]
+      data
+      , C.xLabels [ CA.format labelFor ]
+      , C.yLabels [ CA.withGrid ]
+      , C.labelAt CA.middle .max [ 
+        CA.moveUp 20
+        , CA.fontSize 24
+        ] [ Svg.text "Fruits"]
+    ]
+
+_________________________________________________________________________
+
+data : List { x : number, calories : Float, kj : Float }
+  This is a list of anonymous records, each with three fields:
+
+
+data = [
+  { x = 1, calories = 52.0, kj = 218.0 }
+  , { x = 2, calories = 160.0, kj = 672.0 }
+  , { x = 3, calories = 47.0, kj = 197.0 }
+  , { x = 4, calories = 88.0, kj = 478.0 }
+  ]
+  Each item corresponds to one fruit. The x value is used to place it on the chart's X-axis (not a label — that's handled separately with labelFor).
+
+_________________________________________________________________________
+
+labels : Dict number String
+labels = Dict.fromList [
+  (1, "Apple"),
+  (2, "Avocado"),
+  (3, "Clementine"),
+  (4, "Grape")
+  ]
+
+
+🔍 What's going on:
+  You're creating a Dict (dictionary/map) that links numeric values (x) to fruit names.
+  Keys are the same x values from your data list (1, 2, 3, 4).
+  Values are the corresponding fruit names.
+
+This lets you separate display logic (labeling) from data — which is great design!
+
+  
+labelFor : number -> String
+labelFor x = 
+  case Dict.get x labels of 
+    Just label -> 
+      label
+    Nothing -> 
+      ""
+
+🧠 How it works:
+labelFor takes a number (like x = 2).
+  It uses Dict.get to try to find that number in your labels dictionary.
+  If it finds a match (Just label), it returns the label.
+  If not (Nothing), it returns an empty string (so nothing is shown on the chart).
