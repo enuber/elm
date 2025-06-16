@@ -1,0 +1,329 @@
+54 setup
+
+elm init
+
+npx elm-live src/Main.elm -- --debug --output=index.js
+
+just did some basic setup init, view, update, subscription skeleton
+
+_____________________________________________________________________________
+
+55 counter button
+
+as title suggests, created the button. Added in the Msg for count and the update event.
+
+_____________________________________________________________________________
+
+56 Counter Flags
+
+Introduced using flags. For this to work you have to look at index.html file where we set them using the 
+
+Elm.Main.init({
+  flags: 20
+})
+
+in the Main.elm file, you can call this something besides flags 
+
+_____________________________________________________________________________
+
+57 Counter ports
+
+persistence of count when page refreshed
+
+need to again check out index.html file as that was necessary to persist the data.
+
+_____________________________________________________________________________
+
+
+main : Program Int Model Msg
+
+🔍 What this means:
+You're defining the main entry point of your Elm app.
+  Program Int Model Msg is a type annotation that tells Elm the shape of your application:
+    Int → The flags type: data passed in from JavaScript at app startup.
+    Model → Your app’s internal state type.
+    Msg → The message type used in the update function to represent events.
+Even if you're not using the flags (startup data from JS), you still have to specify a type (here, Int).
+
+main = Browser.document {
+
+This uses the Browser.document function to create a full-page Elm app that controls the <title> and <body> of the HTML document.
+  Use Browser.document when you want to control the document title as well as the view.
+
+
+    init = init
+    , view = view 
+    , update = update
+    , subscriptions = subscriptions
+  }
+
+✅ Summary
+
+Program Int Model Msg- This is a full Elm program with flags, state, and event messages.
+Browser.document - Used for apps that manage the HTML document title and body.
+init - Initializes the app’s state (with optional flags).
+view - Renders the UI + sets the page title.
+update - Handles all app events and updates state.
+subscriptions - Listens to external signals like key presses, time, etc.
+
+_____________________________________________________________________________
+
+type alias Model =
+    { 
+      title : String
+      , counter : Int
+    }
+
+🔧 type alias Model = ...
+  You're defining a record type alias.
+  Model is the name of the type — it represents your app’s state.
+  type alias just means:
+    “This is a shorthand for a specific shape of data.”
+
+✅ Summary
+Model defines the shape of your app's state.
+
+It contains a title string and a counter number.
+
+You will use and update this model inside your init, update, and view functions.
+
+_____________________________________________________________________________
+
+you're now using a parameter (flags) to initialize your app's Model.
+
+initModel : Int -> Model
+This means:
+  The function takes an Int (which will come from Elm's flags system at app startup).
+  It returns a Model — your app’s initial state.
+
+
+initModel flags = 
+  {
+    title = "My title"
+    , counter = flags
+  }
+
+You're creating a Model record using:
+  "My title" as the default title
+  flags as the initial value for the counter
+
+This is a great way to make your app configurable at startup. For example, JavaScript could pass in a value like 10, and the counter would start at 10.
+
+📦 Real-World Example
+If your main is:
+
+main : Program Int Model Msg
+
+Then the browser embedding this Elm app could initialize it with:
+Elm.Main.init({ flags: 100 });
+
+And in Elm, your model becomes:
+{ title = "My title", counter = 100 }
+
+_____________________________________________________________________________
+
+type Msg = 
+  MsgIncreaseCounter
+
+🧠 What This Means:
+Msg is a custom type (also called a union type or variant type).
+
+It defines all the possible kinds of messages/events your app can handle.
+
+Here, there is only one message: MsgIncreaseCounter.
+
+This message will be used to tell your update function:
+“Hey, the user triggered something that should increase the counter!”
+
+
+📦 How It Will Be Used:
+In a button:
+Html.button [ Html.Events.onClick MsgIncreaseCounter ] [ Html.text "Increase" ]
+
+This says:
+  When the button is clicked,
+  Send MsgIncreaseCounter to the update function.
+
+🔁 In update:
+You will eventually handle this message like so:
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+  case msg of
+    MsgIncreaseCounter ->
+      ( { model | counter = model.counter + 1 }, Cmd.none )
+
+✅ Summary
+
+type Msg = ...	- Defines all possible messages/events your app responds to
+MsgIncreaseCounter	- A message for increasing the counter
+Used in update	- Triggers logic to modify the Model based on user actions
+
+_____________________________________________________________________________
+
+
+init : Int -> ( Model, Cmd msg )
+
+🔍 What this means:
+  This function is called when the app starts.
+  It receives an Int (called flags) from outside Elm — likely from JavaScript.
+  It returns a tuple:
+    Model — your app’s starting state.
+    Cmd msg — a command for side effects (like HTTP calls). Here, it’s Cmd.none, meaning no side effect yet.
+
+
+init flags = 
+  ( initModel flags, Cmd.none)
+
+  You're calling your helper function initModel, passing it the flags.
+  That gives you an initialized Model like:
+
+  { title = "My title", counter = flags }
+
+  You pair that with Cmd.none, which means: “Don’t run any commands right now.”
+
+  📦 Context: How this fits in
+Your main is:
+main : Program Int Model Msg
+
+So Elm expects:
+init : Int -> (Model, Cmd Msg)
+
+And that's exactly what you’ve built — the Int comes in as a flag, and your app starts with a fully constructed model and no commands.
+
+_____________________________________________________________________________
+
+view: Model -> Browser.Document Msg
+
+🔍 What this means:
+  view takes your current Model and returns a Browser.Document Msg
+  This is required when using Browser.document in main
+  Browser.Document lets you control:
+    The page <title>
+    The page <body>, as a list of Html Msg elements
+
+view model = 
+  {
+    title = model.title
+    , body = [ Html.button [onClick MsgIncreaseCounter] 
+      [
+        Html.text ("Counter " 
+        ++ String.fromInt model.counter)
+      ]]
+  }
+
+🏷️ title = model.title
+  Sets the browser tab title (i.e., the content of <title> in the HTML <head>)
+  It will appear as whatever string is stored in model.title, e.g. "My title"
+
+📦 body = [...]
+  You're creating the page body with a single element — a button:
+
+Html.button [ onClick MsgIncreaseCounter ]
+  [ Html.text ("Counter " ++ String.fromInt model.counter) ]
+
+✅ Summary
+title = model.title	- Sets the browser tab title
+Html.button	- Renders a button that increases the counter on click
+onClick MsgIncreaseCounter - Sends the event to update
+String.fromInt - Converts number to string for display
+
+_____________________________________________________________________________
+
+update : Msg -> Model -> (Model, Cmd Msg)
+
+🔍 What this means:
+  This function is called every time a message is received (like from onClick MsgIncreaseCounter).
+  It takes:
+    Msg: the message that triggered the update
+    Model: the current state
+  It returns a tuple:
+    The updated model
+    A Cmd Msg (a command for side effects — here, calling persistCounter)
+
+
+update msg model =
+  case msg of
+    MsgIncreaseCounter ->
+      You’re pattern matching on the message type.
+      Since the only message is MsgIncreaseCounter, this is the only case — for now.
+
+      let
+        newCounter = model.counter +1 
+        newTitle = "Title " ++ String.fromInt newCounter
+        newModel = { model | counter = newCounter, title = newTitle}
+      in
+      (newModel, persistCounter newCounter)
+
+🧱 Breakdown:
+
+newCounter = model.counter + 1	- Increments the current counter
+newTitle = "Title " ++ ...	- Creates a new title string like "Title 5"
+`{ model	- ... }`
+persistCounter newCounter	- Triggers a command to persist the counter value
+
+persistCounter is likely a custom function that returns a Cmd Msg.
+For example, maybe it stores the counter in localStorage or logs it.
+
+✅ Summary
+MsgIncreaseCounter	- Responds to user clicking the button
+newCounter, newTitle -	Creates updated values
+`{ model	- ... }`
+persistCounter newCounter	- Runs a side effect (via command) after updating state
+
+_____________________________________________________________________________
+
+subscriptions : Model -> Sub msg
+
+🔍 What this means:
+  subscriptions is a function that tells Elm:
+    "Here’s what external events I want to listen for continuously."
+  It takes the current Model (in case your subscriptions depend on state).
+  It returns a Sub msg, which is a subscription that will send msgs to your update function.
+
+subscriptions _ =
+    Sub.none
+
+You're saying:
+  “I don't want to listen for any external events right now.”
+  The underscore _ means “I don’t care about the model.”
+
+🧩 When you would use subscriptions:
+You’d use subscriptions if your app needed to react to:
+  Time.every	- Trigger a message every second/minute/etc.
+  Browser.Events.onKeyDown	- React to keyboard input
+  WebSocket or ports	- Handle messages from JavaScript or a server
+
+✅ Summary
+subscriptions	- Defines external events your app reacts to
+Sub.none	- No external events — clean and simple setup
+_ (model param)	- Unused model argument
+
+_____________________________________________________________________________
+
+you're introducing a port, which allows Elm to communicate with JavaScript for side effects Elm can't do on its own (like writing to localStorage, sending analytics, etc.).
+
+port persistCounter : Int -> Cmd msg
+
+
+🔍 What this means:
+  You’re declaring an outgoing port named persistCounter.
+  It sends an Int (your counter value) from Elm to JavaScript.
+  It returns a Cmd msg, which is how Elm runs side effects.
+  This port doesn’t expect a response (just a one-way fire-and-forget command).
+
+📦 In JavaScript
+On the JS side, you handle the port like this:
+
+var app = Elm.Main.init({ flags: 0 });
+
+app.ports.persistCounter.subscribe(function(counter) {
+  console.log("Saving counter:", counter);
+  localStorage.setItem("counter", counter);
+});
+
+This code:
+  Subscribes to the persistCounter port
+  Receives the Int from Elm
+  Stores it in localStorage (or does whatever else you want)
+
