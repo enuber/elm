@@ -105,3 +105,892 @@ ____________________________________________________________________________
 53 Focused
 
 working on focus for the cards
+
+
+
+____________________________________________________________________________
+
+type alias Model = 
+  {
+    searchText : String
+    , results: List Book
+    , errorMessage : Maybe String
+    , loading: Bool
+  }
+
+The Model is the central structure in your Elm app that holds all your application state. You can think of it like Elm’s version of a React state object or Redux store.
+
+Field-by-field explanation:
+searchText : String
+    Represents the current text in the search input field.
+    This is the user's input, which could be submitted to an API.
+
+results : List Book
+    A list of books returned by a search.
+    Each item in the list is a Book, defined in your second alias.
+    This list is displayed in the view once data is fetched.
+
+errorMessage : Maybe String
+    Holds an error message only if something goes wrong (like an API failure).
+    Maybe type means this field can be either:
+        Just "Some error message"
+        Or Nothing (i.e., no error)
+loading : Bool
+    Boolean flag to indicate if the app is currently loading data.
+    Useful to show spinners or disable inputs/buttons during network requests.
+
+____________________________________________________________________________
+
+type alias Book = 
+  {
+    title: String
+    , thumbnail: Maybe String
+    , link: String
+    , pages: Maybe Int
+    , publisher: Maybe String
+  }
+
+This defines the structure of each individual book record in your app. It mirrors the shape of a book object returned from your API.
+
+Field-by-field explanation:
+title : String
+    The title of the book (e.g., "Learn Elm in 24 Hours").
+
+thumbnail : Maybe String
+    A URL to the book’s cover image.
+    Wrapped in Maybe because the API might not always return a thumbnail.
+
+link : String
+    A direct URL to more information about the book.
+    Could be used as a link in your UI.
+
+pages : Maybe Int
+    Optional number of pages in the book.
+    Might be missing in the API response, so Maybe is used to represent that.
+
+publisher : Maybe String
+    The name of the book’s publisher.
+    Also optional — could be Just "O'Reilly" or Nothing.
+
+type alias lets you define structured, labeled records for managing state and modeling data.
+
+Elm requires this kind of typing for clarity, safety, and excellent compiler feedback.
+
+Using Maybe makes your code safer by forcing you to handle the case where some data might not be there — avoiding runtime errors like undefined.
+
+____________________________________________________________________________
+
+type Msg 
+  = MsgSearch 
+  | MsgGotResults (Result Http.Error (List Book))
+  | MsgInputTextField String
+  | MsgKeyPressed String
+
+
+You're defining a custom type in Elm called Msg (short for “Message”), which represents all the possible events or user actions your application can respond to. This is a core concept in Elm’s architecture and it enables update logic via case statements.
+
+MsgSearch
+    Triggered when the user clicks a "Search" button or otherwise initiates a search.
+    No payload needed — it simply signals that a search should begin.
+
+MsgGotResults (Result Http.Error (List Book))
+    This message is fired when the HTTP request for search results completes.
+    It carries a Result, which is:
+        Ok (List Book) — a successful response with a list of books.
+        Err Http.Error — an error response (e.g., network error, bad JSON).
+    You handle this in your update function to store the books or show an error.
+
+MsgInputTextField String
+    Triggered when the user types into the search input.
+    Carries the current string in the input field.
+
+MsgKeyPressed String
+    Optional, but useful if you want to react to specific key presses (e.g., Enter key to trigger search).
+    Carries the key that was pressed as a string.
+    You’d typically use this with onKeyDown or similar events.
+
+Msg is a union type representing all possible actions or events.
+Each branch in Msg will be matched in your update function.
+This type drives your application’s logic in Elm and makes everything explicit and type-safe.
+
+____________________________________________________________________________
+
+main: Program () Model Msg
+main = Browser.element {
+    init = init
+    , view = view
+    , update = update
+    , subscriptions = subscriptions
+  }
+
+You're defining the main function in Elm, which serves as the entry point to your application. Let’s break it down in detail:
+
+main : Program () Model Msg
+🔹 Program () Model Msg
+This is the type annotation for Elm’s main program.
+    Program is a type constructor for browser-based Elm apps.
+    () — the flags type. You're not passing in any initial data from JavaScript, so it's just the unit value ().
+    Model — your application's model (the state).
+    Msg — the messages your application understands (your type Msg definition).
+
+🔹 main = Browser.element { ... }
+You're using Browser.element, which is a constructor provided by Elm to build interactive single-page apps with access to commands and subscriptions.
+This is more powerful than Browser.sandbox (which is for static apps without HTTP or ports).
+
+✅ init : () -> (Model, Cmd Msg)
+    Initializes your model when the app starts.
+    Can optionally return a command (like an HTTP request).
+    In your case, it's something like:
+
+✅ view : Model -> Html Msg
+    Takes the current Model and returns HTML with optional event hooks (like clicks, input).
+    This is your UI.
+
+✅ update : Msg -> Model -> (Model, Cmd Msg)
+    Handles all Msg values to update the model.
+    Can return commands (e.g., API calls, delays, etc.).    
+
+✅ subscriptions : Model -> Sub Msg
+    Sets up listeners for outside events (e.g., time, keyboard, WebSockets).
+    Even if unused, it must be provided for Browser.element.
+
+🧠 Summary:
+You're saying:
+“Start my Elm app using Browser.element, here are the four key functions it needs: initialize the model, render the view, update the state when messages are received, and manage any ongoing subscriptions.”
+This sets up your Elm app for real-world use with HTTP, keyboard handling, etc.
+
+____________________________________________________________________________
+
+init: () -> (Model, Cmd Msg )
+
+What it means:
+    init is a function.
+    It takes a unit argument () — this is the default when no "flags" are passed from JavaScript.
+
+It returns a tuple of:
+    Model — your application's initial state
+    Cmd Msg — an initial command (like an HTTP request) that can trigger a Msg when complete.
+
+
+init _ = 
+  ( initModel, cmdSearch initModel )
+
+The underscore _ ignores the unused input () (a placeholder).
+
+🔹 What's cmdSearch initModel?
+This likely means you're starting your app by immediately sending an HTTP request — e.g., searching for books based on the default search text ("").
+
+So your init does two things:
+    Sets up the initial app state
+    Starts an HTTP request to get data to populate the UI
+
+🧠 Summary:
+You're telling Elm:
+    "Start with this default model, and immediately send off an HTTP request (based on the initial state). When the result comes back, send it to MsgGotResults."
+This is a great pattern for apps that load data on page load.
+
+____________________________________________________________________________
+
+you're defining the initial state of your Elm application using a record called initModel.
+
+initModel: Model
+This tells the Elm compiler that initModel has the type Model.
+This relies on the definition of Model
+
+initModel = {
+  searchText = "Spy X Family"
+  , results = []
+  , errorMessage = Nothing
+  , loading = False
+  }
+
+Let’s walk through each field:
+
+✅ searchText = "Spy X Family"
+    This sets the default text in your search field.
+    This value is likely displayed in a search bar or used to trigger a query when the page loads.
+
+✅ results = []
+    An empty list of Book values.
+    This will eventually hold data from your API response.
+    The type List Book means each item will look like:
+
+{ title : String
+, thumbnail : Maybe String
+, link : String
+, pages : Maybe Int
+, publisher : Maybe String
+}
+
+✅ errorMessage = Nothing
+    This uses the Maybe type to indicate "no error yet."
+    If something goes wrong (e.g., a network error or bad data), this would become Just "Something went wrong".
+
+✅ loading = False
+    This boolean tells your app whether to show a loading spinner or disable UI interactions.
+    When the user submits a search, you might set this to True, and then back to False after the response is received.
+
+____________________________________________________________________________
+
+This line defines your view function in Elm — the part responsible for rendering HTML based on your app's current state. 
+
+view: Model -> Html Msg
+
+🔹 Type Signature
+    This says view is a function that:
+        Takes a Model as input (your application's current state).
+        Produces Html Msg as output (an Elm HTML view that can emit Msg events).
+
+
+view model = 
+  viewLayout model
+
+🔹 model
+    The model is the data you're passing into the function — the same Model you defined with fields like searchText, results, etc.
+
+🔹 viewLayout model
+    This means you're delegating your view logic to a helper function called viewLayout.
+    It receives the entire model, allowing it to access fields like:
+        model.searchText
+        model.results
+        model.errorMessage
+        model.loading
+
+🧠 Summary
+    You're creating a clean separation of concerns:
+        view serves as the official interface to Elm's rendering pipeline.
+        viewLayout does the actual work of building and styling the UI.
+        This makes it easier to test, refactor, and keep your code modular.
+
+____________________________________________________________________________
+
+Elm uses a Model-Update-View architecture, and this update function is part of that — it's how your app responds to messages (i.e., user interactions or data updates).
+
+update: Msg -> Model -> ( Model, Cmd Msg )
+
+Msg is a custom type representing events in your app (like input changes, searches, etc.).
+Model is your app’s current state.
+The return is a tuple:
+    the new model (possibly updated), and
+    a command (Cmd Msg) — this tells Elm to perform a side effect like an HTTP request.
+
+
+update msg model = 
+  case msg of
+
+This is a pattern match on the incoming msg — depending on what the message is, you handle it differently.
+
+      MsgInputTextField newTextInput ->
+        ({ model | searchText = newTextInput }, Cmd.none)
+
+        This means the user typed something in the input field.
+        You update the searchText in your model.
+        Cmd.none — no side effect, just update state.
+
+      MsgSearch ->
+        updateStartSearch model
+
+        The user clicked a "Search" button or triggered a search event.
+        This calls your helper function updateStartSearch (defined below) to handle starting the search.
+
+
+      MsgKeyPressed key ->
+        if key == "Enter" then
+          updateStartSearch model
+        else
+          ( model, Cmd.none )
+
+        If the pressed key is "Enter", start the search.
+        Otherwise, do nothing.
+
+
+      This is called after an HTTP response comes back from cmdSearch.
+      MsgGotResults result ->
+          let
+              newModel = { model | loading = False }
+          in
+          case result of
+            You mark loading = False because the request is done.
+
+            Then you pattern-match again:
+              Ok data ->
+                  ( { newModel | results = data, errorMessage = Nothing }, Cmd.none )
+
+            If successful, store the results and clear any previous error.
+
+              Err error ->
+                  let
+                      errorMessage =
+                          case error of
+                              Http.NetworkError ->
+                                  "Network Error"
+
+                              Http.BadUrl _ ->
+                                  "Bad URL"
+
+                              Http.Timeout ->
+                                  "Timeout"
+
+                              Http.BadStatus _ ->
+                                  "Bad Status"
+
+                              Http.BadBody reason ->
+                                  reason
+                  in
+                  ( { newModel | errorMessage = Just errorMessage }, Cmd.none )
+
+                  If there's an error, match the type and save a friendly error message in the model.
+
+____________________________________________________________________________
+
+updateStartSearch : Model -> (Model, Cmd Msg)
+
+This is a helper function used inside your main update function.
+It takes:
+    A Model (your app’s current state),
+And returns:
+    A tuple:
+        The updated Model
+        A Command (Cmd Msg), which Elm will execute to trigger side effects (like an HTTP request)
+
+
+updateStartSearch model =
+   ({ model | loading = True }, cmdSearch model)
+
+🧩 { model | loading = True }
+This is record update syntax.
+    It creates a new copy of the model where only the loading field is changed to True.
+    All other fields (like searchText, results, etc.) stay the same.
+
+🧩 cmdSearch model
+This is a command, likely defined elsewhere in your code. It's a function that returns a Cmd Msg.
+    cmdSearch is probably generating an HTTP request using the current model.searchText.
+    When the request finishes, it will trigger MsgGotResults.
+
+( { model | loading = True }, cmdSearch model )
+This tells Elm:
+“I’m starting a search: update the state to show a loading spinner and go fetch data in the background.”
+
+____________________________________________________________________________
+
+this is your Elm subscriptions function. It’s how your app listens for external events like time, WebSocket messages, or in this case, keyboard input. 
+
+subscriptions : Model -> Sub Msg
+Takes the current Model (not used here, hence the _).
+Returns a subscription, which tells Elm:
+    “Listen for certain events and send a message to update when they happen.”
+
+
+subscriptions _ =
+    Browser.Events.onKeyPress keyPressed
+
+This line is:
+    Subscribing to all keypress events (like when the user types something or presses Enter).
+    Passing the key to a function called keyPressed.
+
+So when the user presses a key:
+    Elm captures the event.
+    Calls your function keyPressed, passing it the key (e.g., "Enter").
+    That returns a Msg, which is sent to the update function.
+
+✅ Summary
+subscriptions - Hook into external events like key presses
+Browser.Events.onKeyPress - Subscribes to global key press events
+keyPressed - Converts the key (like "Enter") into a Msg to be handled by update
+
+____________________________________________________________________________
+
+This is the actual keyPressed used with Browser.Events.onKeyPress, and it’s a JSON decoder, not a function.
+
+keyPressed : Decoder Msg
+This means keyPressed is a decoder that will decode a JSON object (the keypress event) into one of your Msg values.
+
+keyPressed =
+  Decode.map MsgKeyPressed (Decode.field "key" Decode.string)
+
+This is standard Elm JSON decoding. Here's how it works:
+🔽 Decode.field "key" Decode.string
+    This says:
+        “Look for a field named "key" in the incoming JSON and decode it as a String.”
+
+
+🔁 Decode.map MsgKeyPressed ...
+    This takes the decoded "key" string and maps it into your Msg type:
+
+So now, pressing the "Enter" key causes the subscriptions system to send:
+    MsgKeyPressed "Enter"
+to your update function.
+
+🧩 Putting It Together
+    Elm will:
+        Listen for keypress events.
+        Decode the "key" field.
+        Wrap the value in MsgKeyPressed.
+        Send it to update.
+
+✅ Summary
+
+Decode.field -  "key" Decode.string	Extract the "key" field from the browser event
+Decode.map MsgKeyPressed ... - Turn the key string into a Msg
+keyPressed - A decoder for keypress events used in subscriptions
+
+____________________________________________________________________________
+
+ this code uses the elm-ui package (aka Element) instead of regular HTML. It gives you a more structured and type-safe way to build UI in Elm.
+
+viewLayout : Model -> Html Msg
+This says:
+    It takes your app’s Model
+    Returns a Html Msg (a view of your app that can send messages when interacted with)
+
+
+viewLayout model = 
+  Element.layoutWith {
+    options = [
+      Element.focusStyle {
+          borderColor = Just (Element.rgb255 0x00 0x33 0x66)
+          , backgroundColor = Nothing
+          , shadow = Nothing
+      }
+    ]
+  } [] (
+    Element.column [Element.padding 20] [
+      viewSearchBar model
+      , viewErrorMessage model
+      , viewResults model
+      ]
+  )
+
+🧱 Function Body
+    Element.layoutWith {
+        options = [ ... ]
+    } [] ( ... )
+
+This is calling Element.layoutWith, a function from elm-ui, which is like your "main layout wrapper."
+    The first argument is a config record with visual options.
+    The second argument is a list of attributes (you’re passing [], so no extra).
+    The third argument is the actual content of your page.
+
+🎨 options = [...]
+    Element.focusStyle {
+        borderColor = Just (Element.rgb255 0x00 0x33 0x66),
+        backgroundColor = Nothing,
+        shadow = Nothing
+    }
+
+This sets a custom style for when an element receives keyboard focus (like when tabbing).
+You're saying:
+    Use a dark blue border.
+    No background change.
+    No shadow effect.
+This makes keyboard navigation more accessible and stylish.
+
+📦 Main Layout Content
+    Element.column [Element.padding 20] [
+        viewSearchBar model,
+        viewErrorMessage model,
+        viewResults model
+    ]
+
+Element.column lays out children vertically (like a stack).
+Element.padding 20 gives 20px padding around the column.
+It contains 3 child views, all based on the model:
+    viewSearchBar model – likely your input and button.
+    viewErrorMessage model – conditionally shows an error.
+    viewResults model – displays the search results.
+
+🧠 Summary
+Element.layoutWith - Main page wrapper with options like focus styles
+options = [ Element.focusStyle ... ] - Sets focus ring color for accessibility
+Element.column [...] [...] - Vertical layout of child elements (with padding)
+viewSearchBar, viewErrorMessage, viewResults - Sub-components of your UI, all driven by model
+
+____________________________________________________________________________
+
+this is your viewSearchBar function, written with elm-ui. It renders your app's search input area.
+
+viewSearchBar : Model -> Element.Element Msg
+    Takes the current Model
+    Returns an Element Msg (not raw Html, but the elm-ui version)
+
+viewSearchBar model = 
+  Element.row [ Element.spacing 10, Element.paddingXY 0 12] 
+    [ Element.Input.search [] 
+        {
+          onChange = MsgInputTextField
+          , text = model.searchText
+          , placeholder = Nothing
+          , label = Element.Input.labelLeft [] (
+              Element.text "Search books"
+          )
+        }
+        , viewSearchButton
+        , if model.loading then
+            Element.html loadingImage
+          else 
+            Element.none
+    ]
+
+🧱 Main Layout Container
+Element.row [ Element.spacing 10, Element.paddingXY 0 12 ] [ ... ]
+    Element.row arranges its children horizontally.
+    Element.spacing 10 adds 10px space between items.
+    Element.paddingXY 0 12 gives 12px vertical padding (top & bottom).
+
+🔍 Child 1: Search Input
+Element.Input.search []
+  {
+    onChange = MsgInputTextField,
+    text = model.searchText,
+    placeholder = Nothing,
+    label = Element.Input.labelLeft [] (
+      Element.text "Search books"
+    )
+  }
+    Element.Input.search creates a text input field with built-in semantics and style.
+    onChange = MsgInputTextField: when the user types, it sends that text to your update function wrapped in the MsgInputTextField message.
+    text = model.searchText: binds the input field to model.searchText.
+    labelLeft: shows the label on the left side (for accessibility and clarity).
+
+🔘 Child 2: viewSearchButton
+viewSearchButton
+    This likely renders a button (not shown here) that triggers MsgSearch when clicked. You probably defined it separately to keep the layout clean.
+
+🔄 Child 3: Conditional Loader
+if model.loading then
+  Element.html loadingImage
+else 
+  Element.none
+    If model.loading is True, you show a spinner or loading icon using loadingImage (probably a small SVG or <img> inside Html msg).
+    Element.html lets you embed normal Html msg inside elm-ui.
+    If not loading, you show Element.none, which is like a "do nothing" placeholder — it renders nothing.
+
+____________________________________________________________________________
+
+viewErrorMessage : Model -> Element.Element Msg
+
+Takes your app's Model.
+Returns an Element (from elm-ui) that can emit Msg (though this one doesn't need to).
+
+viewErrorMessage model =
+  case model.errorMessage of
+    You're pattern matching on:
+
+      Just errorMessage ->
+        Element.text errorMessage
+        If there’s an error, you show the raw text using Element.text.
+
+      Nothing ->
+        Element.none
+        Element.none renders nothing — it's a clean way to conditionally remove components from the layout.
+
+
+Which means it can be either:
+    Just "Some error text"
+    or Nothing (no error)
+
+____________________________________________________________________________
+
+you're rendering a list of results using elm-ui! 
+
+viewResults : Model -> Element.Element msg
+    Takes the app's Model
+    Returns a visual Element that doesn’t emit any messages (msg is lowercase and unused here)
+
+
+viewResults model =  
+  Element.wrappedRow [ Element.spacing 6, Element.centerX] 
+    (List.map viewBook model.results)
+
+1. 🧱 Element.wrappedRow [...] [...]
+    A horizontal layout (like row) that wraps onto multiple lines if needed.
+    Good for responsive grids or tiles.
+Attributes:
+    Element.spacing 6: Adds 6px (or 0.6rem) between the child elements.
+    Element.centerX: Horizontally centers the whole row within its parent.
+So you're laying out search results in a horizontal line that wraps and is centered.
+
+2. 🔁 List.map viewBook model.results
+    model.results is a list of books (probably List Book).
+    viewBook is a function that turns each Book into an Element msg.
+
+Example signature of viewBook might be:
+    viewBook : Book -> Element msg
+        So for each book in the results, this generates a visual card or item.
+
+____________________________________________________________________________
+
+viewBook : Book -> Element.Element msg
+    Takes a Book record
+    Returns a UI element (Element) that doesn’t emit any messages
+
+
+viewBook book =  
+
+You define several sub-elements before composing the final layout.
+  let
+      titleE = Element.paragraph  [Element.Font.bold, Element.Font.underline, Element.paddingXY 0 12] [Element.text book.title]
+        Displays the book’s title, styled bold and underlined with vertical padding.
+
+      thumbnailE = case book.thumbnail of
+            Just thumbnail ->
+              viewBookCover thumbnail book.title
+            Nothing ->
+              Element.none
+        If a thumbnail URL exists, pass it to viewBookCover (which presumably returns an image element).
+        Otherwise, render nothing. 
+
+      pagesE = case book.pages of
+          Just pages ->
+            Element.el [ Element.Font.size 12 ]
+            (Element.text ("(" ++ String.fromInt pages ++ " pages)"))
+          Nothing ->
+            Element.none
+        If the number of pages is provided, display it in smaller font.
+        Nice little UX detail that avoids showing useless info if missing.
+
+      publisherE = case book.publisher of
+          Just publisher ->
+            Element.paragraph [Element.Font.size 16][Element.text publisher]
+          Nothing -> 
+            Element.none
+        Shows the publisher name if available, styled slightly smaller than the title.
+
+  in
+  
+  Element.newTabLink [
+    Element.width (Element.px 360)
+    , Element.height (Element.px 300)
+    , Element.Background.color (Element.rgb255 0xe3 0xea 0xed)
+    , Element.Border.rounded 20
+    , Element.padding 10
+    , Element.mouseOver [
+        Element.Background.color (Element.rgb255 0x33 0x66 0x99)
+        , Element.Font.color (Element.rgb255 255 255 255 )
+    ]
+    Gives your card a background color, rounded corners, fixed size, and padding.
+    Also defines hover and focus styles — great for accessibility and interactivity.
+
+    , Element.focused [
+        Element.Background.color (Element.rgb255 0x33 0x66 0x99)
+        , Element.Font.color (Element.rgb255 255 255 255 )
+    ]
+  ] {
+    url = book.link
+    , label =
+      Element.row [ Element.centerX ]
+      [ thumbnailE
+      , Element.column [ Element.padding 20 ]
+        [ 
+          titleE
+          , publisherE
+          , pagesE
+        ]
+      ]
+    Horizontal layout with:
+        Thumbnail image
+        A vertical stack of title, publisher, and pages (spaced via padding)
+  }
+
+Element.newTabLink [ ... ] { url = book.link, label = ... }
+This is a clickable book card that opens book.link in a new tab. Here’s how it’s built:
+
+____________________________________________________________________________
+
+renders a book cover image using elm-ui
+
+viewBookCover : String -> String -> Element.Element msg
+    Takes two String arguments:
+        thumbnail – the image URL
+        title – used as the alt-text/description
+    Returns an Element (from elm-ui) that doesn't send any messages
+
+
+viewBookCover thumbnail title =
+  Element.image [] {
+    src = thumbnail
+    , description = title
+  }
+
+  Element.image is the elm-ui way of displaying an image.
+    First argument ([]) is a list of attributes (e.g. size, padding, borders — currently empty).
+    src is the image URL.
+    description is the alt text — crucial for accessibility and screen readers.
+
+____________________________________________________________________________
+
+this is a fully functional and visually styled button component.
+
+viewSearchButton : Element.Element Msg
+    This returns an interactive Element that can emit a Msg.
+    Specifically, this button sends a MsgSearch message when clicked.
+
+viewSearchButton = 
+  Element.Input.button [
+    Element.Background.color (Element.rgb255 0x00 0x33 0x66)
+    , Element.Font.color (Element.rgb255 0xee 0xee 0xee)
+    , Element.Border.rounded 5
+    , Element.padding 12
+    , Element.mouseOver [
+      Element.Background.color (Element.rgb255 0x33 0x66 0x99)
+      , Element.Font.color (Element.rgb255 0xdd 0xdd 0xdd)
+    ]
+    , Element.focused [
+      Element.Background.color (Element.rgb255 0x33 0x66 0x99)
+      , Element.Font.color (Element.rgb255 0xdd 0xdd 0xdd)
+    ]
+  ] {
+    onPress = Just MsgSearch
+    , label = Element.text "Search"
+  }
+
+Element.Input.button creates a styled, accessible button.
+onPress = Just MsgSearch: triggers your update logic when clicked.
+label = Element.text "Search": the visible text inside the button.
+
+
+Element.mouseOver [ ... ]
+Element.focused [ ... ]
+    These provide interactive feedback:
+        Both states lighten the background and slightly adjust the font color.
+        This improves usability and accessibility (keyboard users will see a visual response too).
+
+____________________________________________________________________________
+
+this is the core of your app's side-effect system, where you trigger an HTTP request to the Google Books API using Elm’s Http package. 
+
+cmdSearch : Model -> Cmd Msg
+    Takes the current Model
+    Returns a Cmd Msg (a command that will send a message back when the HTTP request completes)
+
+cmdSearch model = 
+  Http.get {
+    url = "https://www.googleapis.com/books/v1/volumes?q=" ++ model.searchText
+    , expect = Http.expectJson MsgGotResults decodeJson
+  }
+
+expectJson tells Elm to expect a JSON response, and:
+    Try to decode it using your decodeJson decoder.
+    If successful, wrap it in the message: MsgGotResults (Ok data)
+    If it fails, wrap it as MsgGotResults (Err error)
+
+This connects perfectly to your earlier update function case:
+    MsgGotResults result ->
+    case result of
+        Ok data -> ...
+        Err error -> ...
+
+
+✅ Summary
+Http.get - Sends a GET request to a URL
+model.searchText - Injects user input into the query
+expectJson MsgGotResults - Decodes the response and sends it as a MsgGotResults
+Cmd Msg - The command that Elm will run (asynchronously)
+
+____________________________________________________________________________
+
+defining the JSON decoder that interprets the Google Books API response into your internal Book type.
+
+decodeJson : Decoder (List Book)
+This is a JSON decoder that turns the raw JSON from the Google Books API into a list of your custom Book records.
+List Book is just a list of books.
+    In Elm, List is the built-in list type. So:
+        Book = one book
+        List Book = many books
+
+decodeJson = 
+  Decode.field "items" decodeItems
+
+So this decoder says:
+    Look inside the top-level JSON object and grab the "items" field.
+    Then decode it using decodeItems.  
+
+____________________________________________________________________________
+
+decodeItems : Decoder (List Book)
+decodeItems = 
+  Decode.list decodeItem
+
+🧠 What this means
+    Decode.list is a function that takes a decoder for one item and produces a decoder for a list of those items.
+    decodeItem is your decoder for a single book (Book).
+    So Decode.list decodeItem is a decoder for a list of books — Decoder (List Book).
+
+🔄 How this connects
+Here’s the full decoder chain:
+
+1. Top-level API response
+    decodeJson : Decoder (List Book)
+    decodeJson = Decode.field "items" decodeItems
+This says:
+    Go into the "items" field of the JSON, and decode it as a list of books.
+
+2. "items" field
+    decodeItems = Decode.list decodeItem
+This says:
+    Each item in the "items" array should be decoded using decodeItem.
+
+____________________________________________________________________________
+
+now you're at the core of decoding a single Book from the Google Books API.
+
+decodeItem : Decoder Book
+    This decoder reads a single book object from the JSON response.
+    It returns a value of your custom Book type.
+
+decodeItem =
+  Decode.field "volumeInfo" decodeVolumeInfo
+
+This means:
+    Look inside the "volumeInfo" field of the JSON object, and decode that part using decodeVolumeInfo.
+
+____________________________________________________________________________
+
+decodeVolumeInfo : Decoder Book
+    This is the decoder for the "volumeInfo" JSON object.
+    It returns a value of your custom Book record.
+
+decodeVolumeInfo = 
+  Decode.map5 Book
+    (Decode.field "title" Decode.string)
+    (Decode.maybe (Decode.field "imageLinks" decodeImageLinks))
+    (Decode.field "canonicalVolumeLink" Decode.string)
+    (Decode.maybe (Decode.field "pageCount" Decode.int))
+    (Decode.maybe (Decode.field "publisher" Decode.string))
+
+🧩 Decode.map5 Book
+    Decode.map5 takes five decoders and feeds their results to the Book constructor.
+
+    So your Book must have this type:
+        type alias Book =
+            { title : String
+            , thumbnail : Maybe String
+            , link : String
+            , pages : Maybe Int
+            , publisher : Maybe String
+            }
+
+📦 decodeImageLinks
+You’re decoding a nested field like this:
+
+    "imageLinks": {
+    "thumbnail": "https://..."
+    }
+
+____________________________________________________________________________
+
+
+decodeImageLinks : Decoder String
+    This function creates a decoder that returns a String — specifically, the thumbnail URL.
+    It’s used inside a Decode.maybe wrapper in decodeVolumeInfo, which means if the field is missing, decoding will return Nothing instead of failing.
+
+decodeImageLinks = 
+  Decode.field "thumbnail" Decode.string
+
+This says:
+    Inside the current JSON object, look for a field named "thumbnail", and decode it as a string.
+
+Elm does:
+    Find the "imageLinks" object.
+    Inside that, run decodeImageLinks, which extracts "thumbnail".  
+    If either field is missing, it gracefully returns Nothing.
