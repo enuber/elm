@@ -1,0 +1,82 @@
+60 Fuzz setup
+
+elm init
+elm install elm-explorations/test
+
+creating tests in test folder
+
+________________________________________________________________________
+
+61 Fuzz run
+
+to run the test 
+
+npx elm-test
+
+npx elm-test --watch
+
+
+In Elm testing, Fuzz is a way to write property-based tests — tests that automatically generate a wide variety of random inputs to test whether a property or behavior always holds true.
+
+It comes from the elm-explorations/test package and allows you to test your functions more thoroughly than by just using fixed inputs.
+
+✅ What is Fuzz?
+Fuzz is a module that provides random data generators (like numbers, strings, lists, etc.).
+
+You use it to test a property across many random inputs instead of writing lots of manual test cases.
+
+🧪 Example: Property Test with Fuzz.int
+Let’s say you want to verify that adding 0 to a number always returns the number itself:
+
+import Test exposing (..)
+import Expect
+import Fuzz exposing (int)
+
+testAddZero : Test
+testAddZero =
+    fuzz int "n + 0 == n" <|
+        \n ->
+            Expect.equal (n + 0) n
+
+
+🧠 What this does:
+fuzz int "n + 0 == n" means:
+
+"Generate many random integers, call each one n, and run the test body using that value."
+Elm will automatically test your property with many (e.g. 100) random values for n.
+
+🧩 Other available fuzzers:
+Fuzz.int	- Random integers
+Fuzz.float	- Random floating-point numbers
+Fuzz.string	- Random strings
+Fuzz.list fuzzer - List of random values
+Fuzz.tuple - Tuples of random values
+Fuzz.map, .andThen - Combine fuzzers to build custom types
+
+✅ Summary
+Concept	Description
+Fuzz - A module for generating random test data
+fuzz - A function that runs your test many times with random inputs
+Purpose - To catch edge cases and improve confidence in function correctness
+
+
+________________________________________________________________________
+
+62 Fuzz tests
+
+created tests specifically for Main.elm 
+
+________________________________________________________________________
+
+63 Fuzz Review
+
+skipped as review of other code already written that in his code doesn't work, it is no longer current.
+
+________________________________________________________________________
+
+64 more
+
+just discussion on tests nothing important here
+
+________________________________________________________________________
+
