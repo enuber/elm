@@ -1,0 +1,75 @@
+65 mini block setup
+
+elm init
+elm install elm/url
+elm install mdgriffith/elm-ui
+
+npx elm-live src/Main.elm -- --debug --output=index.js
+
+
+did boiler plate code for Browser.application
+
+_________________________________________________________________________________________
+
+66 External links
+
+set up the onUrlChange/onUrlRequest and then changed the "udpate" to watch for Msg signals to do something when the link was clicked. So set up Browser.External to react to the link and open the page.
+
+_________________________________________________________________________________________
+
+66 Internal links
+
+set up links for home page and about page and set the Browser.Internal to have this work.
+
+_________________________________________________________________________________________
+
+67 Naive (?)
+
+currently when clicking on a link, the URL changes. however if I use the back button, the link changes but not the content. This is what MsgUrlChanged is for vs MsgUrlRequested
+
+the naive part comes from the explanation as to why navigaiton doesn't work as expected when you refresh the page on /about. He first showed to copy the index file into a folder called about to fix this but, this is not correct way to do this.
+
+_________________________________________________________________________________________
+
+68 Soft links
+
+This is fixing the way the links work so we have one file but controls the link behavior properly.
+
+This video setup is not a good way to do code. So didn't update
+
+_________________________________________________________________________________________
+
+70 Module Pages
+
+Created individual pages for the home and about page to show how this could be done using Elm. 
+
+_________________________________________________________________________________________
+
+71 Models
+
+when creating a model in a second page like about, you have to send in the info when you call it from Main.
+
+After creating this extra text and having it show, he then switches to a link with some text to go to a detail page /about/detail. Then switches it up to a button. However the button causes an Error in main.elm so to be continued in next video
+
+_________________________________________________________________________________________
+
+72 updates
+
+This video was about adding in a Msg, Updates to about page and how it effects the Main page. Honestly lost in this as he isn't easy to understand
+
+_________________________________________________________________________________________
+
+73 refactoring
+
+Added in types in this video. After this, the Home.elm is being changed to look like the about.elm page with init, update, view etc.
+
+_________________________________________________________________________________________
+
+74 commands
+
+Updated to allow commands, though none are currently active/setup, was just to do it to be set up
+
+_________________________________________________________________________________________
+
+75 subscriptions
+
