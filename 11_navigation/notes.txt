@@ -73,3 +73,45 @@ ________________________________________________________________________________
 
 75 subscriptions
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  Sub.batch [
+    Sub.map MsgHome (Home.subscriptions model.modelHomePage)
+    , Sub.map MsgAbout (About.subscriptions model.modelAboutPage)
+  ]
+
+-- URL HANDLING
+
+onUrlChange : Url -> Msg
+onUrlChange url =
+    MsgUrlChanged url
+
+
+onUrlRequest : UrlRequest -> Msg
+onUrlRequest urlRequest =
+    MsgUrlRequested urlRequest
+
+
+_________________________________________________________________________________________
+
+77 Clicks and links
+
+Added in a button on home page to do count and then added a new link to hide info on about
+
+_________________________________________________________________________________________
+
+78 ui
+
+this one we created a new file called UI.elm and, made generic links and "buttons" (kind of button) and then imported them into where they are used.
+
+_________________________________________________________________________________________
+
+79 router
+
+the Element.explain allows us to add a Debug
+
+    Element.column [ explain Debug.todo ]
+
+can do Debug.log or Debug.toString
+
+added a Router.elm file

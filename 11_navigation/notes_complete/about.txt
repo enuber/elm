@@ -1,0 +1,149 @@
+module About exposing (..)
+
+This makes everything in the file publicly accessible — useful during development, but ideally you'd later switch to:
+
+module About exposing (Model, Msg(..), initModel, view, update, subscriptions)
+
+_________________________________________________________________________________________
+
+import Element exposing (..)
+import Element.Font as EF
+import UI
+
+  Element: all core elm-ui layout functions (e.g., column, text, paragraph)
+  Element.Font as EF: lets you reference font-related helpers like EF.size and EF.bold
+  UI: your custom components, including styled links and buttons
+
+_________________________________________________________________________________________
+
+Model
+
+type alias Model = 
+  { showDetail: Bool }
+
+
+This component’s state contains just one piece of information:
+  Whether the “detail” section is visible or not
+
+_________________________________________________________________________________________
+
+Message
+
+type Msg =
+  MsgShowDetailClicked
+
+The only interaction here is a button press that toggles showDetail to True.
+
+This is all you need to describe user interaction within the About page.
+
+_________________________________________________________________________________________
+
+initModel
+
+initModel : { showDetail : Bool }
+initModel = {
+    showDetail = False
+  }
+
+
+This function returns the default state of the About page:
+  On page load, the details are hidden (showDetail = False)
+
+You return this model to the Main module, where it becomes model.modelAboutPage.
+
+_________________________________________________________________________________________
+
+view
+
+view : Model -> Element Msg
+view model = 
+  column [ Element.padding 20 ]
+  [
+    text "About page"
+    , paragraph [ 
+        paddingXY 0 20
+        ,  EF.size 14
+      ]
+    [
+      text "This is a website for learning about navigation."
+    ]
+    , paragraph [
+        EF.size 14
+      ]
+      [
+        viewDetail model.showDetail
+      ]
+  ]
+
+
+What’s happening:
+  You display the heading "About page"
+  Then a paragraph describing the site
+  Then another paragraph that conditionally shows more content (see viewDetail)
+
+You're using elm-ui's column to vertically stack these items with some padding.
+
+_________________________________________________________________________________________
+
+viewDetail
+
+viewDetail : Bool -> Element Msg
+
+This function checks if the detail section should be shown:
+If showDetail = True:
+
+Element.column []
+  [ text "The authors of this website are amaizing"
+  , UI.link [EF.size 12, EF.bold] "/about/hide-detail" "Hide"
+  ]
+
+  Shows extra text
+  Includes a UI.link that navigates to /about/hide-detail
+  Clicking that triggers a route change which the Main module intercepts and uses to update the model (setting showDetail = False)
+
+If showDetail = False:
+
+UI.linkWithAction [EF.size 12, EF.bold]  MsgShowDetailClicked "Show"
+
+  Displays a button instead of a link
+  Clicking this triggers the MsgShowDetailClicked message, which will be handled by the update function
+
+_________________________________________________________________________________________
+
+update
+
+update : Msg -> Model -> (Model, Cmd.Cmd Msg)
+
+You're handling internal messages for the About module:
+
+case msg of
+    MsgShowDetailClicked ->
+        ({ model | showDetail = True }, Cmd.none)
+
+  When the user clicks the "Show" button, update the model to reveal the details
+  Cmd.none means no side effects (e.g., no HTTP requests or navigation)
+
+✅ This is pure Elm architecture — clear and declarative.
+
+_________________________________________________________________________________________
+
+subscriptions
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+This tells Elm: "The About page doesn’t need to listen to time, mouse, or other external events."
+
+_________________________________________________________________________________________
+
+How it all works together
+
+The page starts with showDetail = False
+You show the intro and a "Show" button
+Clicking the button sends MsgShowDetailClicked, which updates the model
+The page re-renders with the details visible and a "Hide" link
+Clicking "Hide" changes the URL to /about/hide-detail, which Main.elm listens for and resets showDetail = False again
+
+This is a great example of how to combine internal messages, routing, and UI logic cleanly in Elm.
+

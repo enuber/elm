@@ -1,7 +1,8 @@
 module About exposing (..)
 import Element exposing (..)
 import Element.Font as EF
-import Element.Input as Input
+
+import UI
 
 
 type alias Model = 
@@ -40,13 +41,12 @@ view model =
 viewDetail : Bool -> Element Msg
 viewDetail showDetail = 
   if showDetail then 
-    text "The authors of this website are amaizing"
+    Element.column []
+    [ text "The authors of this website are amaizing"
+      , UI.link [EF.size 12, EF.bold] "/about/hide-detail" "Hide"
+    ]
   else  
-    Input.button [ EF.underline]
-    {
-      onPress = Just MsgShowDetailClicked
-      , label = text "Show more"
-    }
+    UI.linkWithAction [EF.size 12, EF.bold]  MsgShowDetailClicked "Show"
 
 
 update: Msg -> Model -> (Model, Cmd.Cmd Msg)

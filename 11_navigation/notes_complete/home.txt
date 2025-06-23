@@ -1,0 +1,152 @@
+module Home exposing (..)
+
+This makes everything in the file publicly available — good for development. Later you might want to write:
+
+module Home exposing (Model, Msg(..), initModel, view, update, subscriptions)
+
+To make it more maintainable and explicit.
+
+_________________________________________________________________________________________
+
+imports
+
+import Element exposing (..)
+import Element.Font as EF
+import Element.Input as Input
+
+
+These bring in all your elm-ui layout tools:
+
+  Element gives access to layout functions like column, row, text, etc.
+  Element.Font is namespaced as EF to access font helpers like EF.size
+  Element.Input provides form controls like buttons and text fields
+
+_________________________________________________________________________________________
+
+message
+
+type Msg = 
+  MsgIncrementCounter
+
+This defines the only interaction in this view:
+  A click message for the counter button
+  You’ll use this in your update function to increment the counter
+
+_________________________________________________________________________________________
+
+Model
+
+type alias Model =
+    { 
+      counter: Int
+    }
+
+This component’s state keeps track of one thing: the number of times the button was clicked.
+
+_________________________________________________________________________________________
+
+initModel
+
+initModel : Model
+initModel = {
+    counter = 0
+  }
+
+
+The initial state for the Home page — the counter starts at zero.
+This gets passed into the app-level model in Main.elm.
+
+_________________________________________________________________________________________
+
+view
+
+view : Model -> Element Msg
+view model = 
+  column [ Element.padding 20 ]
+  [
+    text ("My Blog " ++ String.fromInt model.counter)
+    , paragraph [ 
+        paddingXY 0 20
+        ,  EF.size 14
+      ]
+    [
+      text "Welcome to my new mini blog made with Elm and Elm UI"
+    ]
+    , Input.button [] {
+      onPress = Just MsgIncrementCounter
+      , label = text "Count"
+    }
+  ]
+
+What this does, line by line:
+  view model =
+  You're defining a function that turns the model into UI
+
+  column [ Element.padding 20 ] [...]
+  Lays out children vertically with 20px padding all around
+
+  text ("My Blog " ++ String.fromInt model.counter)
+  Renders the blog title, appending the counter value to it.
+  So it'll look like: My Blog 3
+
+  paragraph [...] [...]
+  Adds a styled paragraph with:
+
+  Top/bottom padding (paddingXY)
+
+  Font size (EF.size 14)
+
+  Contains static welcome text
+
+  Input.button [] { onPress = Just MsgIncrementCounter, label = text "Count" }
+  Adds a button that:
+
+  Says "Count"
+
+  Sends MsgIncrementCounter when clicked
+
+_________________________________________________________________________________________
+
+update
+
+update : Msg -> Model -> (Model, Cmd.Cmd Msg)
+update msg model =
+    case msg of
+        MsgIncrementCounter ->
+          ({model | counter = model.counter + 1}, Cmd.none)
+
+
+What it does:
+  Takes a message and the current model
+  When the user clicks the button, it triggers MsgIncrementCounter
+  This updates the model by incrementing the counter by 1
+  Cmd.none means there are no side effects (e.g., no HTTP requests)
+
+Note: You should clean up the Cmd.Cmd type and import Cmd like this:
+
+import Cmd exposing (Cmd)
+
+update : Msg -> Model -> (Model, Cmd Msg)
+
+_________________________________________________________________________________________
+
+subscriptions
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+This means the Home page doesn’t need to listen to external events like time or WebSocket messages.
+
+_________________________________________________________________________________________
+
+How It All Works Together
+
+1 The app starts with the counter at 0.
+2 view renders the title, welcome message, and a "Count" button.
+3 Clicking the button sends MsgIncrementCounter.
+4 update catches it and increments the counter.
+5 Elm re-renders the view with the new number.
+
+
+

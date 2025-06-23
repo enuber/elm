@@ -1,0 +1,120 @@
+module Router exposing (..)
+
+This exposes everything in the module, useful during development. In a more refined version you might want:
+
+module Router exposing (Route(..), fromUrl, asPath)
+
+So it’s explicit what gets used externally.
+
+_________________________________________________________________________________________
+
+imports
+
+import Url exposing (Url)
+import Url.Parser as Parser exposing ((</>))
+
+
+  Url gives access to the full URL object (with .path, .query, etc.)
+  Url.Parser is Elm’s standard way to safely parse URLs into custom types
+  </> is an infix operator used to chain URL segments, e.g., "about" </> "contact"
+
+_________________________________________________________________________________________
+
+Route types
+
+type Route =
+  RouteAboutPage
+  | RouteHomePage
+
+This defines the pages your app knows about — a key benefit is now you can match on Route instead of string paths later in your app.
+
+_________________________________________________________________________________________
+
+individual parsers
+
+Each parser defines what part of the URL it matches.
+
+aboutPageParser : Parser.Parser a a
+aboutPageParser =
+  Parser.s "about"
+
+  Matches a URL path of /about
+  Parser.s matches a single path segment
+
+homePageParser : Parser.Parser a a
+homePageParser =
+  Parser.top
+
+  Matches the root path / exactly (no segments)
+
+refercenceOnlyContactPageParger : Parser.Parser a a
+refercenceOnlyContactPageParger =
+  Parser.s "about" </> Parser.s "contact"
+
+  Matches /about/contact
+  You're not using this yet — it's just a placeholder example to show how nested paths would work
+
+_________________________________________________________________________________________
+
+Combined router parser
+
+routerParser : Parser.Parser (Route -> c) c
+routerParser = 
+  Parser.oneOf [
+    Parser.map RouteAboutPage aboutPageParser
+    , Parser.map RouteHomePage homePageParser
+  ]
+
+This is the core of the routing logic:
+
+  Parser.map RouteAboutPage aboutPageParser:
+  If the URL is /about, return RouteAboutPage
+
+  Parser.map RouteHomePage homePageParser:
+  If the URL is /, return RouteHomePage
+
+  Parser.oneOf [...]:
+  Tries each parser in order. The first one that matches is used.
+
+_________________________________________________________________________________________
+
+URL -> Route
+
+fromUrl : Url -> Maybe Route
+fromUrl url =
+  Parser.parse routerParser url
+
+This takes a Url and uses your routerParser to extract a Route, returning Nothing if it doesn’t match anything.
+
+Used in Main.elm like:
+
+case Router.fromUrl model.url of
+    Just Router.RouteAboutPage -> ...
+    Nothing -> Element.text "404"
+
+This gives you safe, structured routing.
+
+_________________________________________________________________________________________
+
+Route → String (for links)
+
+asPath : Route -> String
+asPath route =
+  case route of
+        RouteAboutPage ->
+          "/about"
+        RouteHomePage ->
+          "/"
+
+This function converts your internal Route type back into a URL string.
+Used for building navigation links, e.g.:
+
+UI.link [] (Router.asPath Router.RouteAboutPage) "About"
+
+This is safer than manually writing string paths everywhere.
+
+Why This Pattern Is Great
+✅ Type safety
+✅ Centralized routing logic
+✅ Easy to match or switch on routes
+✅ Easy to extend (e.g., add /blog/:slug later)

@@ -1,0 +1,256 @@
+This exposes only main, which is the entry point of the app — exactly what Elm expects.
+
+module Main exposing (main)
+
+_________________________________________________________________________________________
+
+import Browser
+import Browser.Navigation as Nav
+import Url exposing (Url)
+import Html exposing (Html, text)
+import Browser exposing (Document, UrlRequest)
+import Element exposing (..)
+import Element.Font
+import About
+import Home
+import UI
+import Router
+
+Browser: for Browser.application, the main Elm SPA interface
+
+Nav: used for pushUrl and managing navigation keys
+
+Url: type for current location info (path, host, etc.)
+
+Html: needed for Browser.Document (but you're mostly using elm-ui)
+
+Element: all layout and styling elements from elm-ui
+
+Element.Font: for typography styling
+
+About, Home: your page modules
+
+UI: shared UI components (e.g., styled links)
+
+Router: route parsing and string mapping logic
+
+_________________________________________________________________________________________
+
+main : Program () Model Msg
+main =
+    Browser.application
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        , onUrlChange = onUrlChange
+        , onUrlRequest = onUrlRequest
+        }
+
+Defines the Elm application using Browser.application. You set up all the necessary callbacks for routing and state management.
+
+This sets up the SPA framework. It hooks your app into the browser so you can:
+
+Respond to URL changes (onUrlChange)
+
+Intercept link clicks (onUrlRequest)
+
+Manage app state (Model) and messages (Msg)
+
+Elm calls init once to get the initial model and kicks off the app.
+
+_________________________________________________________________________________________
+
+Model Section
+
+type alias Model =
+    { 
+       url : Url
+      , navigationKey : Nav.Key
+      , modelAboutPage : About.Model
+      , modelHomePage : Home.Model
+    }
+
+This is the app's current state. It includes:
+  The current Url (which path is being shown)
+  A navigationKey to let you update the browser history (pushUrl)
+  Page-specific sub-models for About and Home
+
+initModel : Url -> Nav.Key  -> Model
+initModel url navigationKey =
+    { 
+       url = url
+      , navigationKey = navigationKey
+      , modelAboutPage = About.initModel
+      , modelHomePage = Home.initModel
+    }
+
+This just builds the initial Model using default values from your About and Home pages.
+
+
+init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init _ url navigationKey =
+    ( initModel url navigationKey , Cmd.none )
+
+Elm calls this when the app starts. You're ignoring flags (()), and returning your model and no initial commands.
+
+_________________________________________________________________________________________
+
+View Section
+
+view : Model -> Document Msg
+view model =
+    { title = getTitle model.url
+    , body = [ Element.layout [] (viewContent model) ]
+    }
+This renders the entire page.
+  title sets the browser tab title.
+  body is a list of HTML elements (just one here) created from elm-ui's layout.
+
+getTitle : Url -> String
+getTitle url = 
+  if String.startsWith "/about" url.path then 
+    "About"
+  else 
+    "My Blog"
+
+This inspects the URL’s path and decides what the tab title should be.
+
+
+viewContent : Model -> Element Msg
+viewContent model =
+    Element.column [ Element.padding 22 ]
+        [ 
+          viewHeader
+        , viewPage model
+        , viewFooter
+        ]
+
+This defines the vertical layout of your app:
+  The header with nav links.
+  The page content based on the current route.
+  A footer with external links.
+
+viewHeader : Element msg
+viewHeader = 
+ Element.row [Element.spacing 10]
+  [
+    UI.link [] (Router.asPath Router.RouteAboutPage) "about"
+    , UI.link [] (Router.asPath Router.RouteHomePage) "home"
+  ]
+
+  Uses a horizontal row with 10px spacing between links.
+  Each link uses Router.asPath to turn a Route into a URL string (e.g., "/about").
+  UI.link creates a styled link with no onClick action.
+
+
+viewFooter : Element msg
+viewFooter = 
+  Element.row [Element.spacing 10]
+  [
+    UI.link [Element.Font.size 12] "https://www.duckduckgo.com" "DuckDuckGo"
+    , UI.link [Element.Font.size 12] "https://www.ecosia.org" "Ecosia"
+  ]
+
+Same idea as the header — horizontal row of links, but these are external.
+
+
+viewPage : Model -> Element Msg
+viewPage model =
+  case Router.fromUrl model.url of
+      Just route ->
+          case route of
+              Router.RouteAboutPage ->
+                  Element.map MsgAbout (About.view model.modelAboutPage)
+
+              Router.RouteHomePage ->
+                  Element.map MsgHome (Home.view model.modelHomePage)
+
+      Nothing ->
+          Element.text "Not found 404"
+
+This is your router switch.
+  It checks the current URL and returns the corresponding page view.
+  Element.map MsgAbout wraps messages from About.view so they get routed up to your main app.
+  If the route isn't found, you show a fallback 404 message.
+
+_________________________________________________________________________________________
+
+Update Section
+
+type Msg
+    = MsgUrlChanged Url
+    | MsgUrlRequested Browser.UrlRequest
+    | MsgAbout About.Msg
+    | MsgHome Home.Msg
+
+These are the messages your app can handle.
+  Two are about navigation (MsgUrl*)
+  Two are forwarded messages from About and Home pages
+
+
+MsgUrlChanged url -> 
+    ( { model | url = url }, Cmd.none )
+
+Just update the model’s url.
+
+
+When a user clicks a link:
+
+MsgUrlRequested urlRequest ->
+    case urlRequest of
+        Browser.Internal url ->
+            -- special case for "/about/hide-detail"
+
+If the user clicked an internal link, you use Nav.pushUrl to soft-navigate.
+  If it was /about/hide-detail, you manually toggle showDetail to False.
+
+If it was external:
+
+Browser.External url ->
+    ( model, Nav.load url )
+
+It opens a new page (normal navigation).
+
+
+When a sub-page sends a message:
+
+MsgAbout msgAbout ->
+  let 
+    (newAboutPageModel, cmdAboutPage ) = 
+      About.update msgAbout model.modelAboutPage
+  in
+  ( { model | modelAboutPage = newAboutPageModel }
+  , Cmd.map MsgAbout cmdAboutPage )
+
+This passes control down to the About module, then lifts the command back up to your app.
+Same for Home.
+
+_________________________________________________________________________________________
+
+subscriptions Section
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  Sub.batch
+    [ Sub.map MsgHome (Home.subscriptions model.modelHomePage)
+    , Sub.map MsgAbout (About.subscriptions model.modelAboutPage)
+    ]
+
+Combines any time-based or external event subscriptions from submodules.
+
+_________________________________________________________________________________________
+
+Routing hooks
+
+onUrlChange : Url -> Msg
+onUrlRequest : UrlRequest -> Msg
+
+These two handle routing events from the browser:
+
+onUrlChange = browser back/forward
+onUrlRequest = user clicked a <a href="...">
+
+These funnel routing events into your update logic.
+
+_________________________________________________________________________________________

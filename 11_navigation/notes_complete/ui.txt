@@ -1,0 +1,89 @@
+module UI exposing (..)
+
+This exposes all functions in the file. In a production app, you might refine it later like:
+
+module UI exposing (link, linkWithAction)
+
+That would explicitly expose just the components intended for use in other modules.
+
+_________________________________________________________________________________________
+
+imports
+
+import Element exposing (..)
+import Element.Font as EF
+import Element.Input as Input
+
+These imports are all from elm-ui:
+  Element gives you layout and styling primitives (column, text, etc.)
+  Element.Font is aliased to EF for concise font styling
+  Element.Input gives you buttons and interactive elements
+
+_________________________________________________________________________________________
+
+styled link component
+
+link : List (Element.Attribute msg) -> String -> String -> Element msg
+link attrs url caption = 
+    Element.link 
+    ([ EF.color (Element.rgb255 0x11 0x55 0xFF)
+    , EF.underline
+    ] ++ attrs)
+    {
+      url = url
+      , label = Element.text caption
+    }
+
+What this does:
+  Defines a styled hyperlink component that:
+    Accepts extra attributes (attrs)
+    Accepts a URL and visible text (caption)
+  Combines a default blue underlined style with any additional attributes you pass in
+  Returns an Element msg you can plug into any elm-ui layout
+
+Example usage:
+UI.link [] "/about" "About"
+or 
+UI.link [EF.size 12] "https://example.com" "Docs"
+
+This is a simple wrapper that centralizes styling and avoids repeating the same color/underline everywhere.
+
+_________________________________________________________________________________________
+
+Button that sends a message
+
+linkWithAction : List (Element.Attribute msg) -> msg -> String -> Element msg
+linkWithAction attrs msg caption = 
+  Input.button 
+  ([ EF.color (Element.rgb255 0x11 0x55 0xFF)
+    , EF.underline
+    ] ++ attrs)
+    {
+      onPress = Just msg
+      , label = text caption
+    }
+
+What this does:
+  Creates a button styled like a link
+  Takes:
+    Extra styling attributes (attrs)
+    A message to send when clicked (msg)
+    A visible label (caption)
+  Returns an Element that sends the msg when clicked
+
+Use case:
+This is for SPA-style actions (like toggling content, showing details) — where you want the visual style of a link but need to send a custom message, not navigate to a URL.
+
+Example usage:
+
+UI.linkWithAction [EF.size 12] MsgToggle "Show Details"
+
+This is exactly how you use it in About.elm to show/hide the detail text.
+
+_________________________________________________________________________________________
+
+Why this is great
+🔁 DRY: You avoid duplicating styling in every page
+📐 Consistent: Every link looks the same unless you override it
+🎯 Flexible: Accepts extra attributes so you can customize padding, font, etc.
+🔧 Composable: Works cleanly with Element.column, Element.row, etc.

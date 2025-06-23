@@ -9,6 +9,8 @@ import Element exposing (..)
 import Element.Font
 import About
 import Home
+import UI
+import Router
 
 main : Program () Model Msg
 main =
@@ -65,30 +67,41 @@ getTitle url =
 viewContent : Model -> Element Msg
 viewContent model =
     Element.column [ Element.padding 22 ]
-        [ viewLink "/about" "about"
-        , viewLink "/" "home"
+        [ 
+          viewHeader
         , viewPage model
-        , viewLink "https://www.duckduckgo.com" "DuckDuckGo"
-        , viewLink "https://www.ecosia.org" "Ecosia"
+        , viewFooter
         ]
 
+viewHeader : Element msg
+viewHeader = 
+ Element.row [Element.spacing 10]
+  [
+    UI.link [] (Router.asPath Router.RouteAboutPage) "about"
+    , UI.link [] (Router.asPath Router.RouteHomePage) "home"
+  ]
+
+viewFooter : Element msg
+viewFooter = 
+  Element.row [Element.spacing 10]
+  [
+         UI.link [Element.Font.size 12] "https://www.duckduckgo.com" "DuckDuckGo"
+        , UI.link [Element.Font.size 12] "https://www.ecosia.org" "Ecosia"
+  ]
 
 viewPage : Model -> Element Msg
 viewPage model =
-    if model.url.path == "/about" then
-        Element.map MsgAbout (About.view model.modelAboutPage)
-    else
-        Element.map MsgHome ( Home.view model.modelHomePage )
+  case Router.fromUrl model.url of
+      Just route ->
+          case route of
+              Router.RouteAboutPage ->
+                  Element.map MsgAbout (About.view model.modelAboutPage)
 
+              Router.RouteHomePage ->
+                  Element.map MsgHome (Home.view model.modelHomePage)
 
-viewLink : String -> String -> Element msg
-viewLink url caption = 
-    Element.link [ Element.Font.color (Element.rgb255 0x11 0x55 0xFF)
-    , Element.Font.underline
-    , Element.Font.size 13 ] {
-      url = url
-      , label = Element.text caption
-    }
+      Nothing ->
+          Element.text "Not found 404"
 
 
 -- UPDATE
@@ -109,9 +122,17 @@ update msg model =
         MsgUrlRequested urlRequest ->
           case urlRequest of
               Browser.Internal url ->
-                ( model
-                , Nav.pushUrl model.navigationKey (Url.toString url) 
-                )
+                if url.path == "/about/hide-detail" then
+                  let 
+                    hiddenDetailModel = {
+                        showDetail = False
+                      }
+                  in
+                    ({model | modelAboutPage = hiddenDetailModel}, Cmd.none)
+                else
+                  ( model
+                  , Nav.pushUrl model.navigationKey (Url.toString url) 
+                  )
 
               Browser.External url ->
                 ( model, Nav.load url )
