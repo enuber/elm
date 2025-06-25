@@ -11,6 +11,10 @@
     <script>
       Elm.Main.init({
         node: document.querySelector('main'),
+        flags: {
+          w: window.innerWidth,
+          h: window.innerHeight,
+        },
       });
     </script>
   </body>

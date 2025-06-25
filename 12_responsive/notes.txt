@@ -4,3 +4,210 @@ elm init
 elm install mdgriffith/elm-ui
 
 npx elm-live src/Main.elm -- --debug --output=index.js
+
+_______________________________________________________________
+
+80 detect
+
+set up flags in the index.html for w/h
+
+after the initModel, init and Main were updated, we the add subscriptions to detect window size changes.
+
+_______________________________________________________________
+
+81 layout
+
+added in some responsiveness with creating a let in that has direction that will replace column/row 
+
+_______________________________________________________________
+
+Module Declaration
+
+module Main exposing (main)
+
+Declares the module Main, exposing only the main function (the entry point).
+
+
+Imports
+
+import Browser
+import Html
+import Element exposing (..)
+import Element.Font as EF
+import Browser.Events
+
+
+Browser: Used to create an Elm program (Browser.element) that can manage subscriptions, update logic, and rendering.
+Html: Needed to satisfy Browser.element's required return type (Html.Html msg).
+Element: From elm-ui, used to create layout and UI components.
+Element.Font as EF: Aliased font module to adjust font-related styles like size.
+Browser.Events: Provides access to browser events like window resizing.
+
+
+main Program
+
+main: Program Flags Model Msg
+main = Browser.element
+  {
+    init = init,
+    view = view,
+    update = update,
+    subscriptions = subscriptions
+  }
+
+Starts the Elm app using Browser.element.
+Ties together:
+  init – sets up the initial model.
+  view – renders the model to HTML.
+  update – responds to messages (e.g., window resize).
+  subscriptions – listens for browser events.
+
+Types
+
+Size
+type alias Size =
+  {
+    w: Int,
+    h: Int
+  }
+
+A simple record type to represent the window width and height.
+
+
+Model
+
+type alias Model = 
+  {
+    windowSize : Size
+  }
+
+App state only holds windowSize, which will update on resize.
+
+
+Msg
+
+type Msg =
+    MsgWindowSizeChanged Int Int
+
+The only message in this app: triggered when the browser window is resized.
+Carries two integers: width and height.
+
+Flags
+
+type alias Flags = Size
+The Flags type is the same as Size.
+
+It is passed to init on program startup (e.g., from JavaScript via Elm.Main.init({ flags: { w: ..., h: ... }})).
+
+
+🔷 Initialization
+
+init
+
+init : Flags -> ( Model, Cmd msg )
+init flags =
+  (initModel flags, Cmd.none)
+
+Takes initial Flags and produces the starting Model and no command (Cmd.none).
+
+initModel
+
+initModel : Flags -> Model
+initModel flags = {
+    windowSize = flags
+  }
+
+Just wraps the flags as the initial model state.
+
+🔷 View
+
+view : Model -> Html.Html Msg
+
+Takes the Model and returns Elm HTML (rendered using elm-ui's layout).
+
+
+Internals
+
+let
+  direction = if model.windowSize.w > 800 then
+      row
+    else 
+      column
+
+direction is either Element.row or Element.column depending on window width. This controls the main layout direction responsively.
+
+
+fontSize = if model.windowSize.w > 1024 then
+      18
+    else if model.windowSize.w > 800 then
+      20
+    else
+      22
+
+Adjusts the base font size based on window width (smaller screen = larger font for readability).
+
+layout
+
+layout [] 
+  ( Element.column[ EF.size fontSize ][
+    direction [ spacing 10 ] [
+      text (String.fromInt model.windowSize.w ++
+      "x" ++ String.fromInt model.windowSize.h)
+      , text "Item A"
+      , text "Item B"
+      , text "Item C"
+      , text "Item D"
+      , text "Item E"
+    ]
+      , viewWrappedRow
+  ])
+
+Uses elm-ui's layout function to render UI declaratively.
+Element.column wraps everything vertically, applying the responsive fontSize.
+Inside it:
+  A dynamically chosen row or column holds five items + current window dimensions.
+  viewWrappedRow is rendered below it.
+
+viewWrappedRow
+
+viewWrappedRow =
+  wrappedRow [ spacing 10 ] [
+    text "Wrapped 1",
+    ...
+    text "Wrapped 10"
+  ]
+
+Uses wrappedRow, which automatically wraps content to a new line if it doesn't fit.
+Displays 10 text elements in a row, wrapping as needed.
+
+
+🔷 Update
+
+update : Msg -> Model -> ( Model, Cmd msg )
+update msg model =
+  case msg of 
+     MsgWindowSizeChanged w h ->
+      let
+        newWindowSize = {
+            w = w,
+            h = h
+          }
+      in
+        ({ model | windowSize = newWindowSize }, Cmd.none)
+
+Handles a window resize:
+  Creates a new Size with the new dimensions.
+  Updates the model with the new size.
+  Triggers no side effects (Cmd.none).
+
+🔷 Subscriptions
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Browser.Events.onResize MsgWindowSizeChanged
+  
+  Subscribes to the browser's resize event.
+  Every time the window is resized, the message MsgWindowSizeChanged w h is sent with the new size.
+
+The app adapts its layout direction and font size depending on the browser width and listens for window resize events to update in real time.
+
