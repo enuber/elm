@@ -1,0 +1,6 @@
+79 setup
+
+elm init
+elm install mdgriffith/elm-ui
+
+npx elm-live src/Main.elm -- --debug --output=index.js
